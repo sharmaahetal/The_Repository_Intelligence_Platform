@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { fetchForecastReport } from '../services/api';
 
 export interface ForecastData {
   owner: string;
@@ -6,12 +7,12 @@ export interface ForecastData {
   predictionHorizonDays: number;
   healthIndex: number;
   growthProbability: number;
-  expectedStarGrowthPercent: number;
   abandonmentProbability: number;
   maintainerRetentionProbability: number;
   narrativeSummary: string;
   topDrivers: string[];
   topRisks: string[];
+  modelVersion: string;
 }
 
 interface ForecastState {
@@ -33,7 +34,11 @@ export const useForecastStore = create<ForecastState>((set, get) => ({
   loading: false,
   error: null,
 
-  setRepo: (owner, repo) => set({ currentRepo: { owner, repo } }),
+  setRepo: (owner, repo) => {
+    set({ currentRepo: { owner, repo } });
+    get().fetchForecast(owner, repo, get().horizonDays);
+  },
+
   setHorizonDays: (days) => {
     set({ horizonDays: days });
     const { currentRepo } = get();
@@ -45,27 +50,23 @@ export const useForecastStore = create<ForecastState>((set, get) => ({
   fetchForecast: async (owner, repo, horizon) => {
     set({ loading: true, error: null });
     try {
-      // Stub for API endpoint integration
-      const mockForecast: ForecastData = {
-        owner,
-        repo,
-        predictionHorizonDays: horizon,
-        healthIndex: 88,
-        growthProbability: 0.84,
-        expectedStarGrowthPercent: 34,
-        abandonmentProbability: 0.06,
-        maintainerRetentionProbability: 0.91,
-        narrativeSummary: `This repository (${owner}/${repo}) is likely to continue growing over the next ${horizon} days. Driven by sustained contributor retention and consistent release cadence.`,
-        topDrivers: [
-          'Sustained core contributor retention (91%)',
-          'High pull request merge turnaround velocity',
-          'Consistent tagged release rhythm',
-        ],
-        topRisks: [
-          'Minor slowdown in 30-day commit acceleration',
-        ],
+      const apiData = await fetchForecastReport(owner, repo, horizon);
+      
+      const forecast: ForecastData = {
+        owner: apiData.owner,
+        repo: apiData.repo,
+        predictionHorizonDays: apiData.prediction_horizon_days,
+        healthIndex: apiData.derived_health_index,
+        growthProbability: apiData.growth_probability,
+        abandonmentProbability: apiData.abandonment_probability,
+        maintainerRetentionProbability: apiData.maintainer_retention_probability,
+        narrativeSummary: apiData.narrative_summary,
+        topDrivers: apiData.top_drivers,
+        topRisks: apiData.top_risks,
+        modelVersion: apiData.model_version,
       };
-      set({ forecast: mockForecast, loading: false });
+
+      set({ forecast, loading: false });
     } catch (err: any) {
       set({ error: err.message || 'Failed to fetch forecast report', loading: false });
     }
