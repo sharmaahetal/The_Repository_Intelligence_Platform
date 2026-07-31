@@ -1,5 +1,6 @@
 from app.features.builders.temporal.activity import default_registry
 from app.narrative.synthesizer import NarrativeSynthesizer
+from app.services.report_generator import ForecastReportGenerator
 from app.snapshots.snapshot_builder import SnapshotBuilder
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -51,11 +52,15 @@ async def get_repository_forecast(
     # 3. Extract temporal feature vector
     features = default_registry.compute_all(snapshot)
 
-    # 4. Generate ML prediction & derived health index
+    # 4. Generate pure ML probabilities
     predictor = RepositoryPredictor(model_version="v1.0")
     prediction = predictor.predict(features, horizon_days=horizon)
 
-    # 5. Synthesize natural language narrative
+    # 5. Compute Product-level Health Index in Product Service Layer
+    report_generator = ForecastReportGenerator()
+    report_data = report_generator.generate_report_data(prediction)
+
+    # 6. Synthesize natural language narrative
     synthesizer = NarrativeSynthesizer()
     narrative = synthesizer.synthesize(owner, repo, prediction)
 
@@ -63,7 +68,7 @@ async def get_repository_forecast(
         owner=owner,
         repo=repo,
         prediction_horizon_days=horizon,
-        derived_health_index=prediction.derived_health_index,
+        derived_health_index=report_data.health_index,
         growth_probability=prediction.growth_probability,
         abandonment_probability=prediction.abandonment_probability,
         maintainer_retention_probability=prediction.maintainer_retention_probability,

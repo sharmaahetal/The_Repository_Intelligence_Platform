@@ -31,7 +31,7 @@ def test_label_generator_and_inference_engine():
     assert labels.is_abandoned is False
     assert labels.is_retained is True
 
-    # 3. Test Inference Predictor
+    # 3. Test Pure ML Inference Predictor & Product Report Generator
     predictor = RepositoryPredictor(model_version="v1.0")
     features = {
         "fork_to_star_ratio": 0.22,
@@ -44,4 +44,9 @@ def test_label_generator_and_inference_engine():
     assert prediction.prediction_horizon_days == 180
     assert 0.0 <= prediction.growth_probability <= 1.0
     assert 0.0 <= prediction.abandonment_probability <= 1.0
-    assert 0 <= prediction.derived_health_index <= 100
+
+    # Test Product Report Generator
+    from app.services.report_generator import ForecastReportGenerator
+    report_gen = ForecastReportGenerator()
+    report = report_gen.generate_report_data(prediction)
+    assert 0 <= report.health_index <= 100

@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv
+venv/
+ENV/
+
+# Node / Extension
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+extension/dist/
+extension/build/
+.crx/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# IDEs & System
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# ML Models & Datasets (store in registries / remote storage)
+ml/models/*.json
+ml/models/*.pkl
+*.h5
+*.parquet
+
+# Coverage & Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
