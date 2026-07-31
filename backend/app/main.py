@@ -1,11 +1,10 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 from app.api import forecast_router, health_router
 from app.config import settings
 from app.logging import TelemetryMiddleware, logger
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager

@@ -1,6 +1,7 @@
-from datasets.label_generator import TargetLabels
 from app.monitoring.evaluator import OutcomeEvaluator
 from app.monitoring.tracker import PredictionTracker
+
+from datasets.label_generator import TargetLabels
 from ml.inference.predictor import ForecastPrediction
 
 

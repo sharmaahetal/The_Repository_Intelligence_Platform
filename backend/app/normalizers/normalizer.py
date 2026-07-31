@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from app.logging import logger
@@ -45,7 +45,7 @@ class SnapshotNormalizer:
             default_branch=snapshot.get("default_branch", "main"),
             has_wiki=bool(snapshot.get("has_wiki", False)),
             has_pages=bool(snapshot.get("has_pages", False)),
-            snapshot_timestamp=snapshot.get("snapshot_timestamp", datetime.now(timezone.utc).isoformat()),
+            snapshot_timestamp=snapshot.get("snapshot_timestamp", datetime.now(UTC).isoformat()),
             pushed_at=snapshot.get("pushed_at"),
             created_at=snapshot.get("created_at"),
             updated_at=snapshot.get("updated_at"),

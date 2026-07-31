@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+
 from app.logging import logger
+
 from ml.inference.predictor import ForecastPrediction
 
 

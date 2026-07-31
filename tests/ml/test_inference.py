@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from datasets.label_generator import LabelGenerator
 from ml.inference.predictor import RepositoryPredictor
@@ -6,7 +6,7 @@ from ml.inference.predictor import RepositoryPredictor
 
 def test_label_generator_and_inference_engine():
     # 1. Mock snapshot at t_0
-    t0 = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    t0 = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
     snapshot_t0 = {
         "full_name": "facebook/react",
         "snapshot_timestamp": t0.isoformat(),
@@ -15,7 +15,7 @@ def test_label_generator_and_inference_engine():
     }
 
     # 2. Mock snapshot at t_0 + 180d
-    t180 = datetime(2025, 7, 1, 0, 0, 0, tzinfo=timezone.utc)
+    t180 = datetime(2025, 7, 1, 0, 0, 0, tzinfo=UTC)
     snapshot_future = {
         "full_name": "facebook/react",
         "snapshot_timestamp": t180.isoformat(),

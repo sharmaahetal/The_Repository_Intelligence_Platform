@@ -1,5 +1,4 @@
-from datetime import datetime, timezone
-import pytest
+from datetime import UTC, datetime
 
 
 def compute_mock_features(events: list[dict], snapshot_time: datetime) -> dict[str, float]:
@@ -13,19 +12,19 @@ def compute_mock_features(events: list[dict], snapshot_time: datetime) -> dict[s
 
 
 def test_causal_leakage_assertion():
-    t_snapshot = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    t_snapshot = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
 
     historical_events = [
-        {"type": "commit", "timestamp": datetime(2024, 12, 1, 0, 0, 0, tzinfo=timezone.utc)},
-        {"type": "commit", "timestamp": datetime(2024, 12, 15, 0, 0, 0, tzinfo=timezone.utc)},
+        {"type": "commit", "timestamp": datetime(2024, 12, 1, 0, 0, 0, tzinfo=UTC)},
+        {"type": "commit", "timestamp": datetime(2024, 12, 15, 0, 0, 0, tzinfo=UTC)},
     ]
 
     features_before_future = compute_mock_features(historical_events, t_snapshot)
 
     # Inject future events after t_snapshot
     future_events = historical_events + [
-        {"type": "commit", "timestamp": datetime(2025, 1, 15, 0, 0, 0, tzinfo=timezone.utc)},
-        {"type": "commit", "timestamp": datetime(2025, 2, 1, 0, 0, 0, tzinfo=timezone.utc)},
+        {"type": "commit", "timestamp": datetime(2025, 1, 15, 0, 0, 0, tzinfo=UTC)},
+        {"type": "commit", "timestamp": datetime(2025, 2, 1, 0, 0, 0, tzinfo=UTC)},
     ]
 
     features_after_future = compute_mock_features(future_events, t_snapshot)

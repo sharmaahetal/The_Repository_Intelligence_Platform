@@ -46,5 +46,5 @@ class ModelRegistryManager:
         if not target_file.exists():
             raise FileNotFoundError(f"Model manifest not found: {target_file}")
 
-        with open(target_file, "r", encoding="utf-8") as f:
+        with open(target_file, encoding="utf-8") as f:
             return json.load(f)

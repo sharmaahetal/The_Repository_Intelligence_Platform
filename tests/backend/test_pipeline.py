@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.normalizers.normalizer import SnapshotNormalizer
 from app.snapshots.snapshot_builder import SnapshotBuilder
@@ -23,7 +23,7 @@ def test_historical_snapshot_pipeline():
         "created_at": "2015-09-03T20:23:38Z",
     }
 
-    t_snapshot = datetime(2026, 7, 30, 0, 0, 0, tzinfo=timezone.utc)
+    t_snapshot = datetime(2026, 7, 30, 0, 0, 0, tzinfo=UTC)
 
     # 2. Build snapshot S(t_0)
     builder = SnapshotBuilder()

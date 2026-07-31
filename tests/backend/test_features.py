@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.features.builders.temporal.activity import default_registry
 from app.snapshots.snapshot_builder import SnapshotBuilder
@@ -18,7 +18,7 @@ def test_feature_registry_extraction():
         "default_branch": "main",
     }
 
-    t_snapshot = datetime(2026, 7, 30, 0, 0, 0, tzinfo=timezone.utc)
+    t_snapshot = datetime(2026, 7, 30, 0, 0, 0, tzinfo=UTC)
     builder = SnapshotBuilder()
     snapshot = builder.build_snapshot_from_raw(raw_payload, snapshot_time=t_snapshot)
 
