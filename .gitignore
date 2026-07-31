@@ -1,4 +1,8 @@
 # Python
+.venv/
+**/.venv/
+venv/
+ENV/
 __pycache__/
 **/__pycache__/
 *.py[cod]
@@ -21,16 +25,20 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
+**/.pytest_cache/
+.ruff_cache/
+**/.ruff_cache/
+.mypy_cache/
+**/.mypy_cache/
+.coverage
+htmlcov/
 
-# Virtual Environments
-.venv/
-**/.venv/
-venv/
-ENV/
-
-# Node / Extension
+# Node
 node_modules/
 **/node_modules/
+dist/
+**/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -38,7 +46,16 @@ extension/dist/
 extension/build/
 .crx/
 
-# Environment & Secrets
+# GitHub
+.git/
+
+# macOS
+.DS_Store
+**/.DS_Store
+__MACOSX/
+**/__MACOSX/
+
+# Environment
 .env
 .env.*
 !.env.example
@@ -47,28 +64,13 @@ extension/build/
 !**/.env.example
 *.pem
 
-# System, OS Files & Version Control
-.git/
-.DS_Store
-**/.DS_Store
-__MACOSX/
-**/__MACOSX/
+# IDEs & System
 .vscode/
 .idea/
 *.swp
 
-# ML Models & Datasets (store in registries / remote storage)
+# ML Models & Datasets
 ml/models/*.json
 ml/models/*.pkl
 *.h5
 *.parquet
-
-# Coverage, Testing & Linter Caches
-.coverage
-htmlcov/
-.pytest_cache/
-**/.pytest_cache/
-.mypy_cache/
-**/.mypy_cache/
-.ruff_cache/
-**/.ruff_cache/
