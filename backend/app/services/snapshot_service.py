@@ -13,7 +13,6 @@ class RepositorySnapshotService:
     """Application Orchestration Service coordinating collection, validation, raw storage, and snapshot creation."""
 
     def __init__(
-
         self,
         collector: RepositoryCollector | None = None,
         validator: RawPayloadValidator | None = None,
@@ -24,6 +23,10 @@ class RepositorySnapshotService:
         self.validator = validator or RawPayloadValidator()
         self.builder = builder or SnapshotBuilder()
         self.raw_repository = raw_repository
+
+    async def get_snapshot(self, owner: str, repo: str) -> RepositorySnapshot:
+        """Convenience alias for collect_and_build_snapshot."""
+        return await self.collect_and_build_snapshot(owner=owner, repo=repo)
 
     async def collect_and_build_snapshot(
         self,
