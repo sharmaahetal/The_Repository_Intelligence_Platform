@@ -1,48 +1,29 @@
-from collections.abc import Callable
-
+from app.features.base import BaseFeatureBuilder
 from app.logging import logger
-from app.models.snapshot import RepositorySnapshot
-
-FeatureBuilderFunc = Callable[[RepositorySnapshot], float]
 
 
 class FeatureRegistry:
-    """Central registry managing pluggable temporal feature builders for RepositorySnapshot models."""
+    """Passive registry managing feature builder registrations."""
 
     def __init__(self, version: str = "v1.0"):
         self.version = version
-        self._builders: dict[str, FeatureBuilderFunc] = {}
+        self._builders: list[BaseFeatureBuilder] = []
 
-    def register(self, feature_name: str) -> Callable[[FeatureBuilderFunc], FeatureBuilderFunc]:
-        """Decorator to register a feature builder function."""
+    def register(self, builder: BaseFeatureBuilder) -> BaseFeatureBuilder:
+        """Register a feature builder instance."""
+        self._builders.append(builder)
+        logger.info(
+            "Registered feature builder",
+            extra={
+                "builder_name": getattr(builder, "name", str(builder)),
+                "version": self.version,
+            },
+        )
+        return builder
 
-        def decorator(func: FeatureBuilderFunc) -> FeatureBuilderFunc:
-            self._builders[feature_name] = func
-            logger.info(
-                "Registered feature builder",
-                extra={"feature_name": feature_name, "version": self.version},
-            )
-            return func
+    def get_builders(self) -> list[BaseFeatureBuilder]:
+        """Return registered builder instances."""
+        return list(self._builders)
 
-        return decorator
 
-    def compute_all(self, snapshot: RepositorySnapshot) -> dict[str, float]:
-        """Runs all registered feature builders against a RepositorySnapshot S(t_k)."""
-        if not isinstance(snapshot, RepositorySnapshot):
-            raise TypeError(f"compute_all expects RepositorySnapshot, got {type(snapshot)}")
-
-        feature_vector: dict[str, float] = {}
-        for feature_name, builder_func in self._builders.items():
-            try:
-                feature_vector[feature_name] = float(builder_func(snapshot))
-            except Exception as exc:
-                logger.warning(
-                    "Error computing feature",
-                    extra={"feature_name": feature_name, "error": str(exc)},
-                )
-                feature_vector[feature_name] = 0.0
-
-        return feature_vector
-
-    def get_registered_features(self) -> list[str]:
-        return list(self._builders.keys())
+default_registry = FeatureRegistry(version="v1.0")
