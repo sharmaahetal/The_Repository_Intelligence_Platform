@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from backend.app.models.lineage import DataLineage
+
 
 class TopFactor(BaseModel):
     """Represents a single top factor/driver in forecast explanation."""
@@ -46,6 +48,7 @@ class ForecastResponse(BaseModel):
     narrative_summary: str
     top_drivers: list[str] = Field(default_factory=list)
     top_risks: list[str] = Field(default_factory=list)
+    lineage: DataLineage | None = Field(default=None)
 
     cached: bool = Field(default=False)
 
