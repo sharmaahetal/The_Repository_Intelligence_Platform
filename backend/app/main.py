@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
 
-from app.api import forecast_router, health_router
 from app.config import settings
 from app.logging import TelemetryMiddleware, logger
+from backend.app.api.exceptions import register_exception_handlers
+from backend.app.api.middleware import StructuredLoggingMiddleware
+from backend.app.api.routers import api_v1_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,13 +18,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.APP_NAME,
-    version="0.1.0",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
 )
 
-# Telemetry middleware
+# Register Exception Handlers
+register_exception_handlers(app)
+
+# Structured Logging & Telemetry middleware
+app.add_middleware(StructuredLoggingMiddleware)
 app.add_middleware(TelemetryMiddleware)
 
 # CORS middleware
@@ -34,9 +40,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(health_router, prefix=settings.API_V1_PREFIX)
-app.include_router(forecast_router, prefix=settings.API_V1_PREFIX)
+# Mount API v1 router
+app.include_router(api_v1_router)
 
 
 @app.get("/")
@@ -44,5 +49,5 @@ async def root():
     return {
         "message": "Welcome to Repository Intelligence Platform (RIP) API",
         "docs": "/docs",
-        "health": f"{settings.API_V1_PREFIX}/health",
+        "health": "/api/v1/health/live",
     }
