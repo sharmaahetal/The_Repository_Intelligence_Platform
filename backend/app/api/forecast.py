@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 from app.collectors.validator import RawPayloadValidator
-from app.features.builders.temporal.activity import default_registry
+from app.features.pipeline import FeaturePipeline
 from app.narrative.synthesizer import NarrativeSynthesizer
 from app.services.report_generator import ForecastReportGenerator
 from app.snapshots.snapshot_builder import SnapshotBuilder
@@ -55,8 +55,9 @@ async def get_repository_forecast(
     builder = SnapshotBuilder()
     snapshot = builder.build_snapshot_from_raw(raw_payload, snapshot_time=t_now)
 
-    # 3. Extract temporal feature vector
-    features = default_registry.compute_all(snapshot)
+    # 3. Extract feature vector via FeaturePipeline
+    pipeline = FeaturePipeline()
+    features = await pipeline.compute_features_async(snapshot)
 
     # 4. Generate pure ML probabilities
     predictor = RepositoryPredictor(model_version="v1.0")

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from typing import Any
 
 from app.logging import logger
+from app.models.feature import RepositoryFeatures
 
 
 @dataclass
@@ -15,20 +17,25 @@ class ForecastPrediction:
 
 
 class RepositoryPredictor:
-    """Pure ML inference engine estimating target probabilities."""
+    """Pure ML inference engine estimating target probabilities from RepositoryFeatures."""
 
     def __init__(self, model_version: str = "v1.0"):
         self.model_version = model_version
 
     def predict(
         self,
-        features: dict[str, float],
+        features: RepositoryFeatures | dict[str, Any],
         horizon_days: int = 180,
     ) -> ForecastPrediction:
         """Estimates target probabilities from feature vector x_t0."""
-        fork_ratio = features.get("fork_to_star_ratio", 0.1)
-        issue_density = features.get("open_issue_density", 0.05)
-        subscriber_ratio = features.get("subscriber_engagement_ratio", 0.02)
+        if isinstance(features, RepositoryFeatures):
+            feat_vector = features.as_vector()
+        else:
+            feat_vector = {k: float(v) for k, v in features.items()}
+
+        fork_ratio = feat_vector.get("fork_to_star_ratio", 0.1)
+        issue_density = feat_vector.get("open_issue_density", 0.05)
+        subscriber_ratio = feat_vector.get("subscriber_engagement_ratio", 0.02)
 
         # Probabilistic estimations
         growth_prob = min(0.95, max(0.10, 0.40 + (fork_ratio * 1.2) + (subscriber_ratio * 2.0)))
@@ -44,7 +51,12 @@ class RepositoryPredictor:
         )
 
         logger.info(
-            f"Pure ML Prediction [H={horizon_days}d, P(Growth)={prediction.growth_probability}, "
-            f"P(Abandon)={prediction.abandonment_probability}]"
+            "Executed ML prediction model",
+            extra={
+                "horizon_days": horizon_days,
+                "growth_probability": prediction.growth_probability,
+                "abandonment_probability": prediction.abandonment_probability,
+                "model_version": self.model_version,
+            },
         )
         return prediction
