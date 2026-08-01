@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from app.logging import logger
@@ -13,13 +13,20 @@ class SnapshotBuilder:
         self,
         raw_payload: RawRepositoryPayload | dict[str, Any],
         snapshot_time: datetime,
+        request_id: str | None = None,
     ) -> RepositorySnapshot:
-        """Constructs deterministic RepositorySnapshot model S(t_k) from raw GitHub payload.
-        
-        `snapshot_time` must be explicitly provided by the caller/orchestration layer.
+        """Constructs deterministic RepositorySnapshot model S(t_k) from validated payload.
+
+        `snapshot_time` must be an explicit, timezone-aware UTC datetime.
         """
         if snapshot_time is None:
             raise ValueError("snapshot_time is required for deterministic snapshot building.")
+
+        if snapshot_time.tzinfo is None or snapshot_time.tzinfo.utcoffset(snapshot_time) is None:
+            raise ValueError("snapshot_time must be a timezone-aware UTC datetime.")
+
+        # Ensure timestamp is normalized to UTC timezone
+        snapshot_time_utc = snapshot_time.astimezone(UTC)
 
         if isinstance(raw_payload, RawRepositoryPayload):
             repo_name = raw_payload.name
@@ -56,7 +63,8 @@ class SnapshotBuilder:
             updated_at = raw_payload.get("updated_at")
 
         snapshot = RepositorySnapshot(
-            snapshot_timestamp=snapshot_time,
+            schema_version=1,
+            snapshot_timestamp=snapshot_time_utc,
             owner=owner,
             name=repo_name,
             full_name=full_name,
@@ -79,7 +87,8 @@ class SnapshotBuilder:
             extra={
                 "owner": owner,
                 "repo": repo_name,
-                "snapshot_time": snapshot_time.isoformat(),
+                "request_id": request_id,
+                "snapshot_time": snapshot_time_utc.isoformat(),
             },
         )
         return snapshot
