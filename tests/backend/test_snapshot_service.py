@@ -51,5 +51,5 @@ async def test_repository_snapshot_service_orchestration():
     assert snapshot.primary_language == "Go"
     assert snapshot.schema_version == 1
     mock_collector.fetch_repository.assert_called_once_with(
-        "kubernetes", "kubernetes", request_id="req-test-12345"
+        owner="kubernetes", repo="kubernetes", request_id="req-test-12345", etag=None
     )
