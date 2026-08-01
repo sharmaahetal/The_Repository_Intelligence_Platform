@@ -8,7 +8,8 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
-        inject: resolve(__dirname, 'src/content/inject.ts'),
+        content_script: resolve(__dirname, 'src/content/content_script.tsx'),
+        service_worker: resolve(__dirname, 'src/background/service_worker.ts'),
       },
       output: {
         entryFileNames: '[name].js',

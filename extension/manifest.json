@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Repository Intelligence Platform (RIP)",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Cross-browser AI assistant forecasting GitHub repository growth, maintainability, and abandonment risk.",
   "permissions": [
     "storage",
@@ -11,13 +11,16 @@
     "*://github.com/*",
     "http://localhost:8000/*"
   ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
   "content_scripts": [
     {
       "matches": [
         "*://github.com/*"
       ],
       "js": [
-        "inject.js"
+        "content_script.js"
       ],
       "run_at": "document_end"
     }
