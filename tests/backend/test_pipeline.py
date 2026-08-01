@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
+import pytest
 
+from app.models.snapshot import RepositorySnapshot
 from app.normalizers.normalizer import SnapshotNormalizer
 from app.snapshots.snapshot_builder import SnapshotBuilder
 
@@ -29,10 +31,15 @@ def test_historical_snapshot_pipeline():
     builder = SnapshotBuilder()
     snapshot = builder.build_snapshot_from_raw(raw_payload, snapshot_time=t_snapshot)
 
+    assert isinstance(snapshot, RepositorySnapshot)
+    assert snapshot.name == "vscode"
+    assert snapshot.owner == "microsoft"
+    assert snapshot.stars_count == 155000
+    assert snapshot.primary_language == "TypeScript"
+
+    # Test dictionary-like subscript access for backwards compatibility
     assert snapshot["name"] == "vscode"
-    assert snapshot["owner"] == "microsoft"
     assert snapshot["stars_count"] == 155000
-    assert snapshot["primary_language"] == "TypeScript"
 
     # 3. Normalize snapshot
     normalizer = SnapshotNormalizer()
@@ -42,3 +49,11 @@ def test_historical_snapshot_pipeline():
     assert normalized.stars_count == 155000
     assert normalized.primary_language == "TypeScript"
     assert normalized.has_wiki is True
+
+
+def test_snapshot_builder_requires_explicit_timestamp():
+    raw_payload = {"name": "repo", "owner": {"login": "owner"}}
+    builder = SnapshotBuilder()
+    with pytest.raises(TypeError):
+        # Missing required parameter snapshot_time
+        builder.build_snapshot_from_raw(raw_payload)  # type: ignore
