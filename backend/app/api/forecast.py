@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from app.collectors.validator import RawPayloadValidator
 from app.features.builders.temporal.activity import default_registry
 from app.narrative.synthesizer import NarrativeSynthesizer
 from app.services.report_generator import ForecastReportGenerator
@@ -33,7 +34,7 @@ async def get_repository_forecast(
 ):
     """Generate probabilistic forecast report for a GitHub repository."""
     # 1. Mock raw snapshot payload (in production, loaded from RawPayloadRepository / GitHub API)
-    raw_payload = {
+    raw_payload_dict = {
         "name": repo,
         "owner": {"login": owner},
         "full_name": f"{owner}/{repo}",
@@ -46,11 +47,13 @@ async def get_repository_forecast(
         "default_branch": "main",
     }
 
-    # 2. Build snapshot S(t_0) with deterministic snapshot_time from orchestration layer
+    validator = RawPayloadValidator()
+    raw_payload = validator.validate_repository_payload(raw_payload_dict)
+
+    # 2. Build snapshot S(t_0) with deterministic UTC snapshot_time
     t_now = datetime.now(UTC)
     builder = SnapshotBuilder()
     snapshot = builder.build_snapshot_from_raw(raw_payload, snapshot_time=t_now)
-
 
     # 3. Extract temporal feature vector
     features = default_registry.compute_all(snapshot)
