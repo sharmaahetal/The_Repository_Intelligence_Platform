@@ -1,10 +1,14 @@
 from datetime import UTC, datetime
 
-from app.features.builders.temporal.activity import default_registry
+import pytest
+
+import app.features.builders.temporal.activity  # noqa: F401
+from app.features.pipeline import FeaturePipeline
 from app.snapshots.snapshot_builder import SnapshotBuilder
 
 
-def test_feature_registry_extraction():
+@pytest.mark.asyncio
+async def test_feature_registry_extraction():
     raw_payload = {
         "name": "vscode",
         "owner": {"login": "microsoft"},
@@ -22,8 +26,10 @@ def test_feature_registry_extraction():
     builder = SnapshotBuilder()
     snapshot = builder.build_snapshot_from_raw(raw_payload, snapshot_time=t_snapshot)
 
-    # Compute feature vector
-    feature_vector = default_registry.compute_all(snapshot)
+    # Compute feature vector via FeaturePipeline
+    pipeline = FeaturePipeline()
+    repo_features = await pipeline.compute_features_async(snapshot)
+    feature_vector = repo_features.as_vector()
 
     # Assert feature keys exist
     assert "star_density_index" in feature_vector
