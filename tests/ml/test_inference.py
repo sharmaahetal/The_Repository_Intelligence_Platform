@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from app.models.snapshot import RepositorySnapshot
 from app.snapshots.snapshot_builder import SnapshotBuilder
-from datasets.label_generator import LabelGenerator
+from datasets.label_generator import LabelGenerator, PredictionHorizon
 from ml.inference.predictor import RepositoryPredictor
 
 
@@ -33,11 +33,11 @@ def test_label_generator_and_inference_engine():
 
     # Generate targets
     label_gen = LabelGenerator()
-    labels = label_gen.generate_labels(snapshot_t0, snapshot_future, horizon_days=180)
+    labels = label_gen.generate_labels(snapshot_t0, snapshot_future, horizon=PredictionHorizon.DAYS_180)
 
-    assert labels.is_growth is True  # 30% > 25% threshold
-    assert labels.is_abandoned is False
-    assert labels.is_retained is True
+    assert labels.get("is_growth") is True  # 30% > 25% threshold
+    assert labels.get("is_abandoned") is False
+    assert labels.get("is_retained") is True
 
     # 3. Test Pure ML Inference Predictor & Product Report Generator
     predictor = RepositoryPredictor(model_version="v1.0")
