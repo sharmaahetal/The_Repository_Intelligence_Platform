@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from app.logging import logger
+from backend.app.logging import logger
 
 
 class ChronologicalSplitter:
@@ -14,7 +14,7 @@ class ChronologicalSplitter:
         test_start_time: datetime,
     ) -> dict[str, list[dict[str, Any]]]:
         """Chronologically partitions dataset rows into train, validation, and test sets.
-        
+
         `val_start_time` must be strictly earlier than `test_start_time`.
         """
         if val_start_time >= test_start_time:

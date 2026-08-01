@@ -1,11 +1,12 @@
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from app.main import app
-from app.snapshots.snapshot_builder import SnapshotBuilder
+from fastapi.testclient import TestClient
+
 from backend.app.api.dependencies import _SNAPSHOT_SERVICE, get_forecast_service
 from backend.app.api.exceptions import RepositoryNotFoundError
-from fastapi.testclient import TestClient
+from backend.app.main import app
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 
 client = TestClient(app)
 

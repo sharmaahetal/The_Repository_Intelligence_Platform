@@ -1,10 +1,11 @@
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from app.main import app
-from app.snapshots.snapshot_builder import SnapshotBuilder
-from backend.app.api.dependencies import _SNAPSHOT_SERVICE
 from fastapi.testclient import TestClient
+
+from backend.app.api.dependencies import _SNAPSHOT_SERVICE
+from backend.app.main import app
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 
 client = TestClient(app)
 

@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
-import pytest
 
-from app.models.snapshot import RepositorySnapshot
-from app.snapshots.snapshot_builder import SnapshotBuilder
+import pytest
 from pydantic import ValidationError
+
+from backend.app.models.snapshot import RepositorySnapshot
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 
 
 def test_snapshot_builder_property_determinism():

@@ -1,7 +1,8 @@
 from datetime import UTC, datetime
 
 import pytest
-from app.snapshots.snapshot_builder import SnapshotBuilder
+
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 from datasets.label_generator import LabelGenerator, PredictionHorizon
 
 

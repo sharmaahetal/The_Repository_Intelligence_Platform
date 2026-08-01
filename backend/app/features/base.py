@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from app.models.feature import Feature, FeatureContext
-from app.models.snapshot import RepositorySnapshot
+from backend.app.models.feature import Feature, FeatureContext
+from backend.app.models.snapshot import RepositorySnapshot
 
 
 class BaseFeatureBuilder(ABC):

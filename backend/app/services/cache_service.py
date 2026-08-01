@@ -1,7 +1,7 @@
 import time
 from typing import Any
 
-from app.logging import logger
+from backend.app.logging import logger
 
 
 class PredictionCache:

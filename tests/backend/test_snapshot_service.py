@@ -3,10 +3,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.collectors.github_client import GitHubResponse
-from app.collectors.repository import RepositoryCollector
-from app.models.snapshot import RepositorySnapshot
-from app.services.snapshot_service import RepositorySnapshotService
+from backend.app.collectors.github_client import GitHubResponse
+from backend.app.collectors.repository import RepositoryCollector
+from backend.app.models.snapshot import RepositorySnapshot
+from backend.app.services.snapshot_service import RepositorySnapshotService
 
 
 @pytest.mark.asyncio

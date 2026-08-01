@@ -1,6 +1,7 @@
 from typing import Any
-from app.logging import logger
-from app.models.domain import RawRepositoryPayload
+
+from backend.app.logging import logger
+from backend.app.models.domain import RawRepositoryPayload
 
 
 class RawPayloadValidator:

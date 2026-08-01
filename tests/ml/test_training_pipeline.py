@@ -1,6 +1,5 @@
 import tempfile
 from datetime import UTC, datetime
-from pathlib import Path
 
 import numpy as np
 import pytest

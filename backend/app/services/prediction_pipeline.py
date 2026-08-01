@@ -1,13 +1,13 @@
 from datetime import UTC, datetime
 
-from app.features.pipeline import FeaturePipeline
-from app.logging import logger
-from app.narrative.synthesizer import NarrativeSynthesizer
-from app.services.report_generator import ForecastReportGenerator
-from app.services.snapshot_service import RepositorySnapshotService
 from backend.app.api.models import ForecastDetails, ForecastResponse, TopFactor
+from backend.app.features.pipeline import FeaturePipeline
+from backend.app.logging import logger
 from backend.app.ml.explainability.shap_service import ExplainabilityService
+from backend.app.narrative.synthesizer import NarrativeSynthesizer
 from backend.app.services.inference_service import InferenceService
+from backend.app.services.report_generator import ForecastReportGenerator
+from backend.app.services.snapshot_service import RepositorySnapshotService
 
 
 class PredictionPipeline:

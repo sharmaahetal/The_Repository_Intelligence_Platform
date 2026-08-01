@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
+
 import numpy as np
 
-from app.logging import logger
+from backend.app.logging import logger
 
 
 @dataclass

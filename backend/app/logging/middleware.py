@@ -1,9 +1,10 @@
 import time
 from collections.abc import Callable
 
-from app.logging.logger import logger
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from backend.app.logging.logger import logger
 
 
 class TelemetryMiddleware(BaseHTTPMiddleware):

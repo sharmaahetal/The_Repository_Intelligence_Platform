@@ -1,4 +1,5 @@
 import os
+
 import yaml
 
 
@@ -11,14 +12,14 @@ def test_dockerfile_and_compose_existence():
     assert os.path.exists(dockerfile_path), "Dockerfile missing in repository root"
     assert os.path.exists(compose_path), "docker-compose.yml missing in repository root"
 
-    with open(dockerfile_path, "r", encoding="utf-8") as f:
+    with open(dockerfile_path, encoding="utf-8") as f:
         df_content = f.read()
 
     assert "FROM python:3.12" in df_content
     assert "HEALTHCHECK" in df_content
     assert "uvicorn" in df_content
 
-    with open(compose_path, "r", encoding="utf-8") as f:
+    with open(compose_path, encoding="utf-8") as f:
         compose_content = f.read()
 
     assert "rip-backend" in compose_content
@@ -38,7 +39,7 @@ def test_github_actions_ci_workflow():
     )
     assert os.path.exists(ci_path), "CI workflow file .github/workflows/ci.yml is missing"
 
-    with open(ci_path, "r", encoding="utf-8") as f:
+    with open(ci_path, encoding="utf-8") as f:
         ci_yaml = yaml.safe_load(f)
 
     assert ci_yaml.get("name") == "Continuous Integration"

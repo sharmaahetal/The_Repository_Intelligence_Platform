@@ -4,8 +4,9 @@ import subprocess
 from datetime import UTC, datetime
 from typing import Any
 
-from app.logging import logger
 from pydantic import BaseModel, ConfigDict, Field
+
+from backend.app.logging import logger
 
 
 class DatasetManifest(BaseModel):
@@ -55,7 +56,7 @@ class DatasetExporter:
         prediction_horizon_days: int = 180,
     ) -> tuple[str, str]:
         """Exports dataset rows to output_dir/dataset.parquet and output_dir/manifest.json.
-        
+
         Returns tuple of (parquet_path, manifest_path).
         """
         os.makedirs(output_dir, exist_ok=True)

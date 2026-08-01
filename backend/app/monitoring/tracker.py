@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from app.logging import logger
-
+from backend.app.logging import logger
 from ml.inference.predictor import ForecastPrediction
 
 

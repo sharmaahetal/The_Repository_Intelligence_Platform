@@ -2,8 +2,6 @@ import json
 import os
 import re
 
-import pytest
-
 
 def test_extension_manifest_v3_validity():
     manifest_path = os.path.join(os.path.dirname(__file__), "..", "..", "extension", "manifest.json")
@@ -11,7 +9,7 @@ def test_extension_manifest_v3_validity():
 
     assert os.path.exists(manifest_path), f"Manifest file missing at {manifest_path}"
 
-    with open(manifest_path, "r", encoding="utf-8") as f:
+    with open(manifest_path, encoding="utf-8") as f:
         manifest = json.load(f)
 
     assert manifest.get("manifest_version") == 3

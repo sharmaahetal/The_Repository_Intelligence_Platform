@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
 
-from app.config import settings
-from app.logging import TelemetryMiddleware, logger
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from backend.app.api.exceptions import register_exception_handlers
 from backend.app.api.middleware import StructuredLoggingMiddleware
 from backend.app.api.routers import api_v1_router
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from backend.app.config import settings
+from backend.app.logging import TelemetryMiddleware, logger
 
 
 @asynccontextmanager

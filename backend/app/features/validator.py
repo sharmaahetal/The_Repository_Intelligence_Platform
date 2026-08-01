@@ -1,5 +1,6 @@
 import math
-from app.models.feature import Feature
+
+from backend.app.models.feature import Feature
 
 
 class FeatureValidator:
@@ -9,14 +10,11 @@ class FeatureValidator:
         """Validate feature values against domain boundaries."""
         val = feature.value
 
-        if isinstance(val, float):
-            if math.isnan(val) or math.isinf(val):
-                raise ValueError(f"Feature '{feature.name}' value is non-finite: {val}")
+        if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+            raise ValueError(f"Feature '{feature.name}' value is non-finite: {val}")
 
-        if feature.dtype == "int32":
-            if isinstance(val, (int, float)) and val < 0:
-                raise ValueError(f"Count feature '{feature.name}' cannot be negative: {val}")
+        if feature.dtype == "int32" and isinstance(val, (int, float)) and val < 0:
+            raise ValueError(f"Count feature '{feature.name}' cannot be negative: {val}")
 
-        if feature.dtype == "bool":
-            if not isinstance(val, bool):
-                raise TypeError(f"Boolean feature '{feature.name}' must be bool type, got {type(val)}")
+        if feature.dtype == "bool" and not isinstance(val, bool):
+            raise TypeError(f"Boolean feature '{feature.name}' must be bool type, got {type(val)}")

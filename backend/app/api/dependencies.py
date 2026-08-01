@@ -3,7 +3,7 @@ from backend.app.services.forecast_service import ForecastService
 from backend.app.services.inference_service import InferenceService
 from backend.app.services.metrics_service import MetricsService
 from backend.app.services.prediction_pipeline import PredictionPipeline
-from app.services.snapshot_service import RepositorySnapshotService
+from backend.app.services.snapshot_service import RepositorySnapshotService
 
 # Global singletons
 _PREDICTION_CACHE = PredictionCache()

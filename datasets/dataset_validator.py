@@ -1,7 +1,7 @@
 import math
 from typing import Any
 
-from app.logging import logger
+from backend.app.logging import logger
 
 
 class DatasetValidator:
@@ -9,7 +9,7 @@ class DatasetValidator:
 
     def validate_dataset_rows(self, rows: list[dict[str, Any]]) -> None:
         """Runs quality assertions against all dataset rows before exporting.
-        
+
         Raises ValueError or TypeError if dataset integrity criteria are violated.
         """
         if not rows:
@@ -33,12 +33,11 @@ class DatasetValidator:
             seen_keys.add(key)
 
             # 2. Strict temporal order check: snapshot_time < label_future_time
-            if label_future_time:
-                if str(snapshot_time) >= str(label_future_time):
-                    raise ValueError(
-                        f"Temporal integrity violation at row #{idx} ({full_name}): "
-                        f"snapshot_time ({snapshot_time}) >= label_future_time ({label_future_time})"
-                    )
+            if label_future_time and str(snapshot_time) >= str(label_future_time):
+                raise ValueError(
+                    f"Temporal integrity violation at row #{idx} ({full_name}): "
+                    f"snapshot_time ({snapshot_time}) >= label_future_time ({label_future_time})"
+                )
 
             # 3. Horizon validity
             if isinstance(horizon_days, (int, float)) and horizon_days <= 0:
@@ -46,9 +45,8 @@ class DatasetValidator:
 
             # 4. Check for NaNs or Infinities in features and labels
             for k, v in row.items():
-                if isinstance(v, float):
-                    if math.isnan(v) or math.isinf(v):
-                        raise ValueError(f"Invalid non-finite value '{v}' for key '{k}' at row #{idx} ({full_name})")
+                if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+                    raise ValueError(f"Invalid non-finite value '{v}' for key '{k}' at row #{idx} ({full_name})")
 
         logger.info(
             "Dataset pre-export validation completed successfully",

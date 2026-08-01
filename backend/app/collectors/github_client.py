@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from typing import Any
 
 import httpx
-from app.config import github_settings
-from app.logging import logger
+
+from backend.app.config import github_settings
+from backend.app.logging import logger
 
 
 @dataclass

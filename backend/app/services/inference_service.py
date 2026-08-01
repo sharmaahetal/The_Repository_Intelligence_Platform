@@ -1,7 +1,7 @@
 from typing import Any
 
-from app.logging import logger
 from backend.app.api.exceptions import ModelUnavailableError
+from backend.app.logging import logger
 from backend.app.ml.registry.model_registry import ModelRegistry
 from ml.inference.predictor import ForecastPrediction, RepositoryPredictor
 
@@ -42,7 +42,7 @@ class InferenceService:
                 )
                 if "v1.0" in self._loaded_engines:
                     return self._loaded_engines["v1.0"]
-                raise ModelUnavailableError(f"Model version '{version}' is unavailable in registry.", details={"version": version})
+                raise ModelUnavailableError(f"Model version '{version}' is unavailable in registry.", details={"version": version}) from exc
 
         return self._loaded_engines[version]
 

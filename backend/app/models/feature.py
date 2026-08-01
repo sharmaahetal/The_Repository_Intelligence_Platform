@@ -1,6 +1,7 @@
 import math
 from datetime import datetime
 from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -24,9 +25,8 @@ class Feature(BaseModel):
     @classmethod
     def validate_non_nan_or_inf(cls, v: float | int | bool) -> float | int | bool:
         """Sanity check to prevent NaN or Infinity values."""
-        if isinstance(v, float):
-            if math.isnan(v) or math.isinf(v):
-                raise ValueError(f"Feature value cannot be NaN or Infinity, got {v}")
+        if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+            raise ValueError(f"Feature value cannot be NaN or Infinity, got {v}")
         return v
 
 
@@ -64,7 +64,7 @@ class RepositoryFeatures(BaseModel):
     def as_vector(self) -> dict[str, float]:
         """Extract flat dictionary mapping feature names to numerical float values for ML models."""
         vector: dict[str, float] = {}
-        for feat_key, feat in self.features.items():
+        for _feat_key, feat in self.features.items():
             if isinstance(feat.value, bool):
                 vector[feat.name] = 1.0 if feat.value else 0.0
             else:

@@ -1,12 +1,12 @@
-from datetime import UTC, datetime
 import uuid
+from datetime import UTC, datetime
 
-from app.collectors.repository import RepositoryCollector
-from app.collectors.validator import RawPayloadValidator
-from app.logging import logger
-from app.models.snapshot import RepositorySnapshot
-from app.raw_store.raw_repository import RawPayloadRepository
-from app.snapshots.snapshot_builder import SnapshotBuilder
+from backend.app.collectors.repository import RepositoryCollector
+from backend.app.collectors.validator import RawPayloadValidator
+from backend.app.logging import logger
+from backend.app.models.snapshot import RepositorySnapshot
+from backend.app.raw_store.raw_repository import RawPayloadRepository
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 
 
 class RepositorySnapshotService:

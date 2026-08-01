@@ -2,9 +2,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-import app.features.builders.temporal.activity  # noqa: F401
-from app.features.pipeline import FeaturePipeline
-from app.snapshots.snapshot_builder import SnapshotBuilder
+import backend.app.features.builders.temporal.activity  # noqa: F401
+from backend.app.features.pipeline import FeaturePipeline
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 
 
 @pytest.mark.asyncio

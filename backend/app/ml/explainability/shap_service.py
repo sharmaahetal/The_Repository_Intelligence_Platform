@@ -1,7 +1,8 @@
 from typing import Any
+
 import numpy as np
 
-from app.logging import logger
+from backend.app.logging import logger
 from backend.app.ml.dataset_loader import InMemoryDataset
 
 
@@ -31,7 +32,7 @@ class ExplainabilityService:
             else:
                 shap_matrix = np.abs(shap_values).mean(axis=0)
 
-            for fname, score in zip(feature_names, shap_matrix):
+            for fname, score in zip(feature_names, shap_matrix, strict=False):
                 importances_dict[fname] = round(float(score), 4)
 
             logger.info("Computed SHAP feature importances successfully")
@@ -46,7 +47,7 @@ class ExplainabilityService:
         # 2. Fallback to model.feature_importances_ if available
         if hasattr(model, "feature_importances_"):
             scores = model.feature_importances_
-            for fname, score in zip(feature_names, scores):
+            for fname, score in zip(feature_names, scores, strict=False):
                 importances_dict[fname] = round(float(score), 4)
         else:
             # Equal weight fallback

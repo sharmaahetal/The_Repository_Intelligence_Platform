@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.logging import logger
-from app.models.snapshot import RepositorySnapshot
+from backend.app.logging import logger
+from backend.app.models.snapshot import RepositorySnapshot
 
 
 @dataclass

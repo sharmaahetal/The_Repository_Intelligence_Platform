@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends
 
 from backend.app.api.dependencies import get_inference_service

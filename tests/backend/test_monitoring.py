@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
-from app.monitoring.evaluator import OutcomeEvaluator
-from app.monitoring.tracker import PredictionTracker
+from backend.app.monitoring.evaluator import OutcomeEvaluator
+from backend.app.monitoring.tracker import PredictionTracker
 from datasets.label_generator import Label, PredictionHorizon, TargetLabels
 from ml.inference.predictor import ForecastPrediction
 

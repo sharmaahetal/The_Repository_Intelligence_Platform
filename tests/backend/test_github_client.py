@@ -1,8 +1,9 @@
 import httpx
 import pytest
-from app.collectors.github_client import GitHubAPIClient
-from app.collectors.validator import RawPayloadValidator
-from app.models.domain import RawRepositoryPayload
+
+from backend.app.collectors.github_client import GitHubAPIClient
+from backend.app.collectors.validator import RawPayloadValidator
+from backend.app.models.domain import RawRepositoryPayload
 
 
 @pytest.mark.asyncio

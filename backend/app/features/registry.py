@@ -1,5 +1,5 @@
-from app.features.base import BaseFeatureBuilder
-from app.logging import logger
+from backend.app.features.base import BaseFeatureBuilder
+from backend.app.logging import logger
 
 
 class FeatureRegistry:

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from app.logging import logger
+from backend.app.logging import logger
 from backend.app.ml.config import ModelConfig, TrainingConfig
 from backend.app.ml.dataset_loader import DatasetLoader
 from backend.app.ml.evaluator import ModelEvaluator

@@ -1,7 +1,7 @@
-from app.features.base import BaseFeatureBuilder, feature_builder
-from app.features.registry import default_registry
-from app.models.feature import Feature, FeatureContext
-from app.models.snapshot import RepositorySnapshot
+from backend.app.features.base import BaseFeatureBuilder, feature_builder
+from backend.app.features.registry import default_registry
+from backend.app.models.feature import Feature, FeatureContext
+from backend.app.models.snapshot import RepositorySnapshot
 
 
 @feature_builder(name="community_builder", version=1, description="Computes community features")

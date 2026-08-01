@@ -28,6 +28,9 @@ jobs:
       - name: Run Ruff Linter
         run: ruff check .
 
+      - name: Run Mypy Type Checker
+        run: mypy backend/app
+
       - name: Run Pytest Test Suite
         run: pytest -v --cov=backend
 

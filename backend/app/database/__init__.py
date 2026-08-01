@@ -1,3 +1,3 @@
-from app.database.connection import AsyncSessionLocal, engine, get_db
+from backend.app.database.connection import AsyncSessionLocal, engine, get_db
 
 __all__ = ["engine", "AsyncSessionLocal", "get_db"]

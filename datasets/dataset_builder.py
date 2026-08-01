@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any
 
-from app.features.pipeline import FeaturePipeline
-from app.logging import logger
-from app.models.snapshot import RepositorySnapshot
+from backend.app.features.pipeline import FeaturePipeline
+from backend.app.logging import logger
+from backend.app.models.snapshot import RepositorySnapshot
 from datasets.dataset_validator import DatasetValidator
 from datasets.export import DatasetExporter
 from datasets.label_generator import LabelGenerator, PredictionHorizon

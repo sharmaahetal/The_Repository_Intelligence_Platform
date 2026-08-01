@@ -1,5 +1,6 @@
 from typing import Any
-from pydantic import BaseModel, ConfigDict, Field
+
+from pydantic import BaseModel, ConfigDict
 
 
 class RawRepositoryPayload(BaseModel):

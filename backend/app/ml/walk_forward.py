@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import numpy as np
-from app.logging import logger
+
+from backend.app.logging import logger
 from backend.app.ml.dataset_loader import InMemoryDataset
 
 
@@ -28,7 +29,7 @@ class WalkForwardValidator:
         if len(dataset) < 4:
             raise ValueError(f"Insufficient dataset samples ({len(dataset)}) to construct {num_folds} folds.")
 
-        sorted_indices = np.argsort(dataset.snapshot_times)
+        sorted_indices = np.argsort([t.timestamp() for t in dataset.snapshot_times])
         X_sorted = dataset.X[sorted_indices]
         y_sorted = dataset.y[sorted_indices]
         times_sorted = [dataset.snapshot_times[i] for i in sorted_indices]

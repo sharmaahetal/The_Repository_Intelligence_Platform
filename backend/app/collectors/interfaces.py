@@ -1,6 +1,6 @@
 from typing import Any, Protocol
-from app.models.domain import RawRepositoryPayload
-from app.models.snapshot import RepositorySnapshot
+
+from backend.app.models.snapshot import RepositorySnapshot
 
 
 class GitHubProvider(Protocol):

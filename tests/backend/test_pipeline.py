@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
+
 import pytest
 
-from app.models.snapshot import RepositorySnapshot
-from app.normalizers.normalizer import SnapshotNormalizer
-from app.snapshots.snapshot_builder import SnapshotBuilder
+from backend.app.models.snapshot import RepositorySnapshot
+from backend.app.normalizers.normalizer import SnapshotNormalizer
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 
 
 def test_historical_snapshot_pipeline():

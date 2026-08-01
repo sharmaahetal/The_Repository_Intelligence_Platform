@@ -1,5 +1,4 @@
-from app.logging import logger
-
+from backend.app.logging import logger
 from ml.inference.predictor import ForecastPrediction
 
 

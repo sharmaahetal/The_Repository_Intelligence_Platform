@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from app.logging import logger
-from app.models.feature import RepositoryFeatures
+from backend.app.logging import logger
+from backend.app.models.feature import RepositoryFeatures
 
 
 @dataclass

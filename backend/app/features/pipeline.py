@@ -1,8 +1,8 @@
-from app.features.registry import FeatureRegistry, default_registry
-from app.features.validator import FeatureValidator
-from app.logging import logger
-from app.models.feature import FeatureContext, RepositoryFeatures
-from app.models.snapshot import RepositorySnapshot
+from backend.app.features.registry import FeatureRegistry, default_registry
+from backend.app.features.validator import FeatureValidator
+from backend.app.logging import logger
+from backend.app.models.feature import FeatureContext, RepositoryFeatures
+from backend.app.models.snapshot import RepositorySnapshot
 
 
 class FeaturePipeline:

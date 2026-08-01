@@ -2,9 +2,10 @@ from datetime import datetime
 from enum import IntEnum
 from typing import Any
 
-from app.logging import logger
-from app.models.snapshot import RepositorySnapshot
 from pydantic import BaseModel, ConfigDict, Field
+
+from backend.app.logging import logger
+from backend.app.models.snapshot import RepositorySnapshot
 
 
 class PredictionHorizon(IntEnum):
@@ -67,7 +68,7 @@ class LabelGenerator:
         horizon: PredictionHorizon = PredictionHorizon.DAYS_180,
     ) -> TargetLabels:
         """Computes empirical labels strictly by comparing S(t_0) with S(t_0 + H).
-        
+
         Enforces strict temporal anti-leakage: snapshot_future.snapshot_timestamp MUST exceed snapshot_t0.snapshot_timestamp.
         """
         if not isinstance(snapshot_t0, RepositorySnapshot) or not isinstance(snapshot_future, RepositorySnapshot):

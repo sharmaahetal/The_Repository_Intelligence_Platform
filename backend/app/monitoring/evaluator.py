@@ -1,5 +1,5 @@
-from app.logging import logger
-from app.monitoring.tracker import LoggedPredictionRecord
+from backend.app.logging import logger
+from backend.app.monitoring.tracker import LoggedPredictionRecord
 from datasets.label_generator import TargetLabels
 
 

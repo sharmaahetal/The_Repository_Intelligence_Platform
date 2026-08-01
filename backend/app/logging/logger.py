@@ -1,7 +1,6 @@
 import logging
 import sys
 
-
 STANDARD_LOG_FIELDS = {
     "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
     "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",

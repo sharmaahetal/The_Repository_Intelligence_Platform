@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from app.logging import logger
+from backend.app.logging import logger
 from backend.app.ml.config import ModelConfig, TrainingConfig
 
 
@@ -127,13 +127,11 @@ class ModelRegistry:
             json.dump(manifest, f, indent=2)
 
         # Update 'latest' pointer
+        import contextlib
         latest_link = model_dir / "latest"
-        if latest_link.exists() or latest_link.is_symlink():
-            if latest_link.is_symlink() or os.path.name == "nt":
-                try:
-                    latest_link.unlink()
-                except Exception:
-                    pass
+        if (latest_link.exists() or latest_link.is_symlink()) and (latest_link.is_symlink() or os.name == "nt"):
+            with contextlib.suppress(Exception):
+                latest_link.unlink()
 
         try:
             latest_link.symlink_to(version_dir.name, target_is_directory=True)

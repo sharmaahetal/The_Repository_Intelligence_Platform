@@ -1,7 +1,6 @@
 from datetime import UTC, datetime
 
-from app.models.snapshot import RepositorySnapshot
-from app.snapshots.snapshot_builder import SnapshotBuilder
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 from datasets.label_generator import LabelGenerator, PredictionHorizon
 from ml.inference.predictor import RepositoryPredictor
 
@@ -54,7 +53,7 @@ def test_label_generator_and_inference_engine():
     assert 0.0 <= prediction.abandonment_probability <= 1.0
 
     # Test Product Report Generator
-    from app.services.report_generator import ForecastReportGenerator
+    from backend.app.services.report_generator import ForecastReportGenerator
 
     report_gen = ForecastReportGenerator()
     report = report_gen.generate_report_data(prediction)

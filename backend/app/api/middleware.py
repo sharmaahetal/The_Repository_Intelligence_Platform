@@ -1,10 +1,11 @@
 import time
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
-from app.logging import logger
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from backend.app.logging import logger
 
 
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):

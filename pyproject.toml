@@ -15,7 +15,14 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM"]
-ignore = []
+ignore = ["E501", "N806", "B008", "N818"]
+
+[tool.mypy]
+python_version = "3.12"
+explicit_package_bases = true
+mypy_path = "."
+ignore_missing_imports = true
+namespace_packages = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -23,4 +30,3 @@ python_files = ["test_*.py"]
 python_functions = ["test_*"]
 pythonpath = ["backend", "."]
 asyncio_mode = "auto"
-

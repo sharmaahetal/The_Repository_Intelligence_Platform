@@ -1,17 +1,17 @@
 from datetime import UTC, datetime
+
 import pytest
 from pydantic import ValidationError
 
 # Import builders to register them with default_registry
-import app.features.builders.temporal.activity  # noqa: F401
-import app.features.builders.temporal.community  # noqa: F401
-import app.features.builders.temporal.repository  # noqa: F401
-
-from app.features.pipeline import FeaturePipeline
-from app.features.validator import FeatureValidator
-from app.models.feature import Feature, FeatureContext, RepositoryFeatures
-from app.models.snapshot import RepositorySnapshot
-from app.snapshots.snapshot_builder import SnapshotBuilder
+import backend.app.features.builders.temporal.activity  # noqa: F401
+import backend.app.features.builders.temporal.community  # noqa: F401
+import backend.app.features.builders.temporal.repository  # noqa: F401
+from backend.app.features.pipeline import FeaturePipeline
+from backend.app.features.validator import FeatureValidator
+from backend.app.models.feature import Feature, RepositoryFeatures
+from backend.app.models.snapshot import RepositorySnapshot
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 
 
 @pytest.fixture

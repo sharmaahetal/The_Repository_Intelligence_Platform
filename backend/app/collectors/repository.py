@@ -1,7 +1,6 @@
-from typing import Any
 
-from app.collectors.github_client import GitHubAPIClient, GitHubResponse
-from app.logging import logger
+from backend.app.collectors.github_client import GitHubAPIClient, GitHubResponse
+from backend.app.logging import logger
 
 
 class RepositoryCollector:

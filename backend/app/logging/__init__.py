@@ -1,4 +1,4 @@
-from app.logging.logger import logger
-from app.logging.middleware import TelemetryMiddleware
+from backend.app.logging.logger import logger
+from backend.app.logging.middleware import TelemetryMiddleware
 
 __all__ = ["logger", "TelemetryMiddleware"]

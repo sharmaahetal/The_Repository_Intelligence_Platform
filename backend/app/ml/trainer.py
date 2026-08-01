@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.logging import logger
+from backend.app.logging import logger
 from backend.app.ml.config import ModelConfig
 from backend.app.ml.dataset_loader import InMemoryDataset
 

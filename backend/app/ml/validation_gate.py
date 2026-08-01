@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from typing import Any
+
 import numpy as np
 
-from app.logging import logger
+from backend.app.logging import logger
 from backend.app.ml.config import TrainingConfig
 from backend.app.ml.dataset_loader import InMemoryDataset
 

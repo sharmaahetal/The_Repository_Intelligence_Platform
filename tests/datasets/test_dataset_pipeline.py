@@ -5,13 +5,11 @@ from datetime import UTC, datetime
 
 import pytest
 
-import app.features.builders.temporal.activity  # noqa: F401
-from app.snapshots.snapshot_builder import SnapshotBuilder
+import backend.app.features.builders.temporal.activity  # noqa: F401
+from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 from datasets.dataset_builder import DatasetBuilder
 from datasets.dataset_validator import DatasetValidator
-from datasets.export import DatasetExporter
 from datasets.label_generator import PredictionHorizon
-from datasets.split import ChronologicalSplitter
 
 
 @pytest.fixture
@@ -65,7 +63,7 @@ async def test_dataset_builder_end_to_end(snapshot_pairs):
         assert os.path.exists(result["manifest_path"])
 
         # Verify Manifest JSON
-        with open(result["manifest_path"], "r", encoding="utf-8") as f:
+        with open(result["manifest_path"], encoding="utf-8") as f:
             manifest = json.load(f)
 
         assert manifest["dataset_version"] == "v1.2"

@@ -1,9 +1,9 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from app.logging import logger
-from app.models.domain import RawRepositoryPayload
-from app.models.snapshot import RepositorySnapshot
+from backend.app.logging import logger
+from backend.app.models.domain import RawRepositoryPayload
+from backend.app.models.snapshot import RepositorySnapshot
 
 
 class SnapshotBuilder:
