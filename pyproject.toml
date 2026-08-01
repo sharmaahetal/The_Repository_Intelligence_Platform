@@ -13,6 +13,8 @@ dependencies = [
   "httpx",
   "pydantic",
   "pydantic-settings",
+  "sqlalchemy",
+  "aiosqlite",
   "numpy",
   "pandas",
   "scikit-learn",
