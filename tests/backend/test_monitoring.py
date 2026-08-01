@@ -1,7 +1,8 @@
+from datetime import UTC, datetime
+
 from app.monitoring.evaluator import OutcomeEvaluator
 from app.monitoring.tracker import PredictionTracker
-
-from datasets.label_generator import TargetLabels
+from datasets.label_generator import Label, PredictionHorizon, TargetLabels
 from ml.inference.predictor import ForecastPrediction
 
 
@@ -25,12 +26,13 @@ def test_prediction_logging_and_drift_evaluation():
 
     # 3. Simulate ground-truth outcome 180 days later at t_0 + 180d
     actual_labels = TargetLabels(
-        snapshot_timestamp="2025-07-01T00:00:00Z",
-        horizon_days=180,
-        is_growth=True,  # Actual outcome: repo grew
-        is_abandoned=False,  # Actual outcome: not abandoned
-        is_retained=True,
-        star_growth_percent=32.0,
+        schema_version=1,
+        snapshot_timestamp=datetime(2025, 7, 1, 0, 0, 0, tzinfo=UTC),
+        horizon=PredictionHorizon.DAYS_180,
+        labels={
+            "is_growth:v1": Label(name="is_growth", value=True),
+            "is_abandoned:v1": Label(name="is_abandoned", value=False),
+        },
     )
 
     # 4. Evaluate Brier calibration score drift
