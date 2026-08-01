@@ -1,0 +1,73 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "API Request Throughput",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(rip_requests_total[5m])",
+          "legendFormat": "Requests / sec"
+        }
+      ]
+    },
+    {
+      "title": "Average Forecast Latency (ms)",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "rip_request_latency_avg_ms",
+          "legendFormat": "Avg Latency (ms)"
+        }
+      ]
+    },
+    {
+      "title": "Prediction Cache Hit Ratio",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "rip_cache_hit_ratio * 100",
+          "legendFormat": "Cache Hit %"
+        }
+      ]
+    },
+    {
+      "title": "Model Version Breakdown",
+      "type": "piechart",
+      "targets": [
+        {
+          "expr": "rip_model_version_usage_total",
+          "legendFormat": "{{version}}"
+        }
+      ]
+    },
+    {
+      "title": "Feature Drift PSI Monitor",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "rip_drift_alerts_total",
+          "legendFormat": "Active Drift Alerts"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["rip", "mlops", "observability"],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "Repository Intelligence Platform (RIP) - System Health & ML Monitoring",
+  "version": 1
+}
