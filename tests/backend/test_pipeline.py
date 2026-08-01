@@ -36,10 +36,7 @@ def test_historical_snapshot_pipeline():
     assert snapshot.owner == "microsoft"
     assert snapshot.stars_count == 155000
     assert snapshot.primary_language == "TypeScript"
-
-    # Test dictionary-like subscript access for backwards compatibility
-    assert snapshot["name"] == "vscode"
-    assert snapshot["stars_count"] == 155000
+    assert snapshot.schema_version == 1
 
     # 3. Normalize snapshot
     normalizer = SnapshotNormalizer()

@@ -1,27 +1,35 @@
 from datetime import UTC, datetime
 
+from app.models.snapshot import RepositorySnapshot
+from app.snapshots.snapshot_builder import SnapshotBuilder
 from datasets.label_generator import LabelGenerator
 from ml.inference.predictor import RepositoryPredictor
 
 
 def test_label_generator_and_inference_engine():
+    builder = SnapshotBuilder()
+
     # 1. Mock snapshot at t_0
     t0 = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
-    snapshot_t0 = {
+    raw_t0 = {
+        "name": "react",
+        "owner": {"login": "facebook"},
         "full_name": "facebook/react",
-        "snapshot_timestamp": t0.isoformat(),
-        "stars_count": 200000,
+        "stargazers_count": 200000,
         "pushed_at": "2025-01-01T10:00:00Z",
     }
+    snapshot_t0 = builder.build_snapshot_from_raw(raw_t0, snapshot_time=t0)
 
     # 2. Mock snapshot at t_0 + 180d
     t180 = datetime(2025, 7, 1, 0, 0, 0, tzinfo=UTC)
-    snapshot_future = {
+    raw_future = {
+        "name": "react",
+        "owner": {"login": "facebook"},
         "full_name": "facebook/react",
-        "snapshot_timestamp": t180.isoformat(),
-        "stars_count": 260000,  # 30% star growth
+        "stargazers_count": 260000,  # 30% star growth
         "pushed_at": "2025-07-01T10:00:00Z",  # Pushes continued
     }
+    snapshot_future = builder.build_snapshot_from_raw(raw_future, snapshot_time=t180)
 
     # Generate targets
     label_gen = LabelGenerator()
@@ -47,6 +55,7 @@ def test_label_generator_and_inference_engine():
 
     # Test Product Report Generator
     from app.services.report_generator import ForecastReportGenerator
+
     report_gen = ForecastReportGenerator()
     report = report_gen.generate_report_data(prediction)
     assert 0 <= report.health_index <= 100
