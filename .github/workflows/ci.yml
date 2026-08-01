@@ -1,57 +1,67 @@
-name: CI Pipeline
+name: Continuous Integration
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
-  backend-and-ml-tests:
+  backend-test:
+    name: Backend Test & Lint Pipeline
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "pip"
+          python-version: '3.12'
+          cache: 'pip'
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
-          pip install pytest-cov
+          pip install ruff mypy pytest pytest-cov httpx fastapi pydantic scikit-learn numpy pandas
 
       - name: Run Ruff Linter
-        run: |
-          ruff check .
+        run: ruff check .
 
       - name: Run Pytest Test Suite
-        env:
-          PYTHONPATH: backend:.
-        run: |
-          pytest --cov=backend --cov=ml --cov=datasets --cov-report=term-missing
+        run: pytest -v --cov=backend
 
   extension-build:
+    name: Extension Frontend Build
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js 18
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: extension/package-lock.json
+          node-version: '20'
 
-      - name: Install Extension Dependencies
+      - name: Build WebExtension Bundle
         run: |
           cd extension
           npm ci
-
-      - name: Build Extension Bundle
-        run: |
-          cd extension
           npm run build
+
+  docker-build:
+    name: Docker Image Build Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: rip-backend:latest
