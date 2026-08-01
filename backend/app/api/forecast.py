@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from app.features.builders.temporal.activity import default_registry
 from app.narrative.synthesizer import NarrativeSynthesizer
 from app.services.report_generator import ForecastReportGenerator
@@ -45,9 +46,11 @@ async def get_repository_forecast(
         "default_branch": "main",
     }
 
-    # 2. Build snapshot S(t_0)
+    # 2. Build snapshot S(t_0) with deterministic snapshot_time from orchestration layer
+    t_now = datetime.now(UTC)
     builder = SnapshotBuilder()
-    snapshot = builder.build_snapshot_from_raw(raw_payload)
+    snapshot = builder.build_snapshot_from_raw(raw_payload, snapshot_time=t_now)
+
 
     # 3. Extract temporal feature vector
     features = default_registry.compute_all(snapshot)

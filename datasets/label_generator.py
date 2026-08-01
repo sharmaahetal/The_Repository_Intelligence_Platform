@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from app.logging import logger
+from app.models.snapshot import RepositorySnapshot
 
 
 @dataclass
@@ -21,8 +23,8 @@ class LabelGenerator:
 
     def generate_labels(
         self,
-        snapshot_t0: dict[str, Any],
-        snapshot_future: dict[str, Any],
+        snapshot_t0: RepositorySnapshot | dict[str, Any],
+        snapshot_future: RepositorySnapshot | dict[str, Any],
         horizon_days: int = 180,
     ) -> TargetLabels:
         """Computes empirical labels by comparing S(t_0) with S(t_0 + H)."""
@@ -40,8 +42,11 @@ class LabelGenerator:
         # Maintainer retention check: proxy from activity continuity
         is_retained = not is_abandoned
 
+        raw_ts = snapshot_t0.get("snapshot_timestamp", "")
+        ts_str = raw_ts.isoformat() if isinstance(raw_ts, datetime) else str(raw_ts)
+
         labels = TargetLabels(
-            snapshot_timestamp=snapshot_t0.get("snapshot_timestamp", ""),
+            snapshot_timestamp=ts_str,
             horizon_days=horizon_days,
             is_growth=is_growth,
             is_abandoned=is_abandoned,
@@ -50,7 +55,13 @@ class LabelGenerator:
         )
 
         logger.info(
-            f"Generated {horizon_days}d labels for {snapshot_t0.get('full_name')}: "
-            f"Growth={is_growth} ({star_growth_pct}%), Abandoned={is_abandoned}"
+            "Generated target labels for repository snapshot",
+            extra={
+                "full_name": snapshot_t0.get("full_name"),
+                "horizon_days": horizon_days,
+                "is_growth": is_growth,
+                "star_growth_percent": star_growth_pct,
+                "is_abandoned": is_abandoned,
+            },
         )
         return labels
