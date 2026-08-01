@@ -12,9 +12,17 @@ def test_root_endpoint():
     assert data["docs"] == "/docs"
 
 
-def test_health_endpoint():
-    response = client.get("/api/v1/health")
+def test_health_live_endpoint():
+    response = client.get("/api/v1/health/live")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "healthy"
-    assert "version" in data
+    assert data["status"] == "ok"
+    assert "timestamp" in data
+
+
+def test_health_ready_endpoint():
+    response = client.get("/api/v1/health/ready")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ready"
+    assert data["model_loaded"] is True
