@@ -39,7 +39,14 @@ def test_forecast_caching_behavior():
         snapshot_time=datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC),
     )
 
-    with patch.object(_SNAPSHOT_SERVICE, "collect_and_build_snapshot", new=AsyncMock(return_value=mock_snapshot)), patch.object(_SNAPSHOT_SERVICE, "get_snapshot", new=AsyncMock(return_value=mock_snapshot)):
+    with (
+        patch.object(
+            _SNAPSHOT_SERVICE,
+            "collect_and_build_snapshot",
+            new=AsyncMock(return_value=mock_snapshot),
+        ),
+        patch.object(_SNAPSHOT_SERVICE, "get_snapshot", new=AsyncMock(return_value=mock_snapshot)),
+    ):
         # 1. First call: cache miss -> cached = False
         res1 = client.get("/api/v1/forecast/golang/go?horizon=180")
         assert res1.status_code == 200
@@ -55,7 +62,9 @@ def test_forecast_caching_behavior():
 
 def test_repository_not_found_exception_handling():
     class MockErrorService:
-        async def get_forecast(self, owner: str, repo: str, horizon: int = 180, model_version: str = "v1.0"):
+        async def get_forecast(
+            self, owner: str, repo: str, horizon: int = 180, model_version: str = "v1.0"
+        ):
             raise RepositoryNotFoundError(
                 f"Repository '{owner}/{repo}' was not found on GitHub.",
                 details={"owner": owner, "repo": repo},

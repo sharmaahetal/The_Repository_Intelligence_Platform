@@ -4,7 +4,9 @@ from backend.app.models.feature import Feature, FeatureContext
 from backend.app.models.snapshot import RepositorySnapshot
 
 
-@feature_builder(name="activity_builder", version=1, description="Computes activity & density ratios")
+@feature_builder(
+    name="activity_builder", version=1, description="Computes activity & density ratios"
+)
 class ActivityBuilder(BaseFeatureBuilder):
     """Pure builder for activity and density features."""
 
@@ -12,9 +14,7 @@ class ActivityBuilder(BaseFeatureBuilder):
     version = 1
     description = "Computes activity & density ratios"
 
-    async def compute(
-        self, snapshot: RepositorySnapshot, context: FeatureContext
-    ) -> list[Feature]:
+    async def compute(self, snapshot: RepositorySnapshot, context: FeatureContext) -> list[Feature]:
         stars = float(snapshot.stars_count)
         size_mb = max(1.0, float(snapshot.size_kb) / 1024.0)
         forks = float(snapshot.forks_count)

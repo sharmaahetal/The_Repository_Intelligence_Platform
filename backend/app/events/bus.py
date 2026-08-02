@@ -30,7 +30,9 @@ class EventBus:
         handlers = self._subscribers.get(event_type, [])
 
         if not handlers:
-            logger.debug("No handlers registered for event", extra={"event_type": event_type.__name__})
+            logger.debug(
+                "No handlers registered for event", extra={"event_type": event_type.__name__}
+            )
             return
 
         for handler in handlers:
@@ -42,7 +44,11 @@ class EventBus:
             except Exception as exc:
                 logger.error(
                     "Error executing event handler",
-                    extra={"event_type": event_type.__name__, "handler": handler.__name__, "error": str(exc)},
+                    extra={
+                        "event_type": event_type.__name__,
+                        "handler": handler.__name__,
+                        "error": str(exc),
+                    },
                 )
 
 

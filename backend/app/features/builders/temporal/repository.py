@@ -4,7 +4,9 @@ from backend.app.models.feature import Feature, FeatureContext
 from backend.app.models.snapshot import RepositorySnapshot
 
 
-@feature_builder(name="repository_builder", version=1, description="Computes repository structural features")
+@feature_builder(
+    name="repository_builder", version=1, description="Computes repository structural features"
+)
 class RepositoryBuilder(BaseFeatureBuilder):
     """Pure builder for repository structural features."""
 
@@ -12,9 +14,7 @@ class RepositoryBuilder(BaseFeatureBuilder):
     version = 1
     description = "Computes repository structural features"
 
-    async def compute(
-        self, snapshot: RepositorySnapshot, context: FeatureContext
-    ) -> list[Feature]:
+    async def compute(self, snapshot: RepositorySnapshot, context: FeatureContext) -> list[Feature]:
         size_mb = round(float(snapshot.size_kb) / 1024.0, 4)
         is_large = size_mb >= 500.0
 

@@ -57,7 +57,11 @@ class GitHubAPIClient:
 
     async def aclose(self) -> None:
         """Close underlying HTTP client session if owned by this instance."""
-        if self._owns_client and self._client is not None and not getattr(self._client, "is_closed", False):
+        if (
+            self._owns_client
+            and self._client is not None
+            and not getattr(self._client, "is_closed", False)
+        ):
             await self._client.aclose()
 
     async def __aenter__(self) -> "GitHubAPIClient":
@@ -96,8 +100,16 @@ class GitHubAPIClient:
 
         # Parse owner/repo from endpoint if available for structured logging
         parts = endpoint.strip("/").split("/")
-        owner = parts[1] if len(parts) >= 2 and parts[0] == "repos" else (parts[0] if parts else "unknown")
-        repo = parts[2] if len(parts) >= 3 and parts[0] == "repos" else (parts[1] if len(parts) >= 2 else "unknown")
+        owner = (
+            parts[1]
+            if len(parts) >= 2 and parts[0] == "repos"
+            else (parts[0] if parts else "unknown")
+        )
+        repo = (
+            parts[2]
+            if len(parts) >= 3 and parts[0] == "repos"
+            else (parts[1] if len(parts) >= 2 else "unknown")
+        )
 
         max_retries = github_settings.MAX_RETRIES
 

@@ -42,8 +42,10 @@ async def get_prometheus_metrics(
     ]
 
     for model_ver, usage_count in summary["model_version_usage"].items():
-        lines.extend([
-            f'rip_model_version_usage_total{{version="{model_ver}"}} {usage_count}',
-        ])
+        lines.extend(
+            [
+                f'rip_model_version_usage_total{{version="{model_ver}"}} {usage_count}',
+            ]
+        )
 
     return "\n".join(lines) + "\n"

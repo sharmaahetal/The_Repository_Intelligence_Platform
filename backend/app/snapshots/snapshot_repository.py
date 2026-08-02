@@ -16,7 +16,9 @@ class SnapshotRepository:
     async def save_snapshot(self, snapshot: RepositorySnapshot) -> None:
         """Persist RepositorySnapshot domain entity."""
         if not isinstance(snapshot, RepositorySnapshot):
-            raise TypeError(f"SnapshotRepository requires RepositorySnapshot instance, got {type(snapshot)}")
+            raise TypeError(
+                f"SnapshotRepository requires RepositorySnapshot instance, got {type(snapshot)}"
+            )
 
         self._snapshots.append(snapshot)
         logger.info(
@@ -32,7 +34,8 @@ class SnapshotRepository:
     async def get_latest_snapshot(self, owner: str, repo: str) -> RepositorySnapshot | None:
         """Retrieve the most recent RepositorySnapshot for a repository."""
         matches = [
-            s for s in self._snapshots
+            s
+            for s in self._snapshots
             if s.owner.lower() == owner.lower() and s.name.lower() == repo.lower()
         ]
         if not matches:

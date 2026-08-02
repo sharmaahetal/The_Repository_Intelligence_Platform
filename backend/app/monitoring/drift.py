@@ -75,6 +75,7 @@ class DriftDetector:
         # Kolmogorov-Smirnov test
         try:
             from scipy.stats import ks_2samp  # type: ignore
+
             ks_res = ks_2samp(base_arr, curr_arr)
             ks_stat = round(float(ks_res.statistic), 4)
             ks_p = round(float(ks_res.pvalue), 4)
@@ -89,11 +90,15 @@ class DriftDetector:
         elif psi_val < 0.25:
             severity = "moderate"
             has_drift = False
-            alerts.append(f"Moderate feature drift detected for '{feature_name}' (PSI={psi_val:.4f}). Monitoring recommended.")
+            alerts.append(
+                f"Moderate feature drift detected for '{feature_name}' (PSI={psi_val:.4f}). Monitoring recommended."
+            )
         else:
             severity = "severe"
             has_drift = True
-            alerts.append(f"SEVERE FEATURE DRIFT DETECTED for '{feature_name}' (PSI={psi_val:.4f} >= 0.25 threshold). Model retraining required!")
+            alerts.append(
+                f"SEVERE FEATURE DRIFT DETECTED for '{feature_name}' (PSI={psi_val:.4f} >= 0.25 threshold). Model retraining required!"
+            )
 
         report = DriftReport(
             feature_name=feature_name,

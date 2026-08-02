@@ -65,6 +65,7 @@ class ModelRegistry:
         else:
             # Fallback pickle / joblib
             import pickle
+
             with open(version_dir / "model.pkl", "wb") as f:
                 pickle.dump(model, f)
             model_path = version_dir / "model.pkl"
@@ -128,8 +129,11 @@ class ModelRegistry:
 
         # Update 'latest' pointer
         import contextlib
+
         latest_link = model_dir / "latest"
-        if (latest_link.exists() or latest_link.is_symlink()) and (latest_link.is_symlink() or os.name == "nt"):
+        if (latest_link.exists() or latest_link.is_symlink()) and (
+            latest_link.is_symlink() or os.name == "nt"
+        ):
             with contextlib.suppress(Exception):
                 latest_link.unlink()
 
@@ -179,6 +183,7 @@ class ModelRegistry:
         if model_path.exists():
             try:
                 import xgboost as xgb  # type: ignore
+
                 model = xgb.XGBClassifier()
                 model.load_model(str(model_path))
                 return model, feature_schema
@@ -188,6 +193,7 @@ class ModelRegistry:
         pkl_path = target_version_dir / "model.pkl"
         if pkl_path.exists():
             import pickle
+
             with open(pkl_path, "rb") as f:
                 model = pickle.load(f)
             return model, feature_schema

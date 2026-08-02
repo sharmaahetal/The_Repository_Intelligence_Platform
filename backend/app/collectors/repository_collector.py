@@ -49,7 +49,9 @@ class RepositoryCollector:
         etag: str | None = None,
     ) -> RawRepositoryPayload:
         """Orchestrate collection pipeline: fetch payload via GitHubClient -> validate via Validator."""
-        response = await self.fetch_repository(owner=owner, repo=repo, request_id=request_id, etag=etag)
+        response = await self.fetch_repository(
+            owner=owner, repo=repo, request_id=request_id, etag=etag
+        )
 
         raw_dict: dict[str, Any] = response.data if isinstance(response.data, dict) else {}
         return self.validator.validate_repository_payload(

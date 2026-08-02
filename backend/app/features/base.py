@@ -14,9 +14,7 @@ class BaseFeatureBuilder(ABC):
     description: str = ""
 
     @abstractmethod
-    async def compute(
-        self, snapshot: RepositorySnapshot, context: FeatureContext
-    ) -> list[Feature]:
+    async def compute(self, snapshot: RepositorySnapshot, context: FeatureContext) -> list[Feature]:
         """Compute pure features from snapshot and context without side effects."""
         ...
 

@@ -106,7 +106,9 @@ class RawRepositoryPayload(BaseModel):
         return self.raw_json.get("updated_at")
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], headers: dict[str, str] | None = None) -> "RawRepositoryPayload":
+    def from_dict(
+        cls, data: dict[str, Any], headers: dict[str, str] | None = None
+    ) -> "RawRepositoryPayload":
         """Helper to create RawRepositoryPayload directly from a raw GitHub JSON payload dict."""
         hdrs = headers or {}
         remaining_str = hdrs.get("X-RateLimit-Remaining") or hdrs.get("x-ratelimit-remaining") or ""
@@ -145,6 +147,4 @@ class RawPayload(Base):
         index=True,
     )
 
-    __table_args__ = (
-        Index("idx_raw_repo_collector", "repo_owner", "repo_name", "collector_type"),
-    )
+    __table_args__ = (Index("idx_raw_repo_collector", "repo_owner", "repo_name", "collector_type"),)

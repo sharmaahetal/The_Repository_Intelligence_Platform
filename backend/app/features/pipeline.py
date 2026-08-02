@@ -16,9 +16,7 @@ class FeaturePipeline:
         self.registry = registry or default_registry
         self.validator = validator or FeatureValidator()
 
-    async def compute_features_async(
-        self, snapshot: RepositorySnapshot
-    ) -> RepositoryFeatures:
+    async def compute_features_async(self, snapshot: RepositorySnapshot) -> RepositoryFeatures:
         """Asynchronously compute all feature vectors for a repository snapshot."""
         if not isinstance(snapshot, RepositorySnapshot):
             raise TypeError(f"FeaturePipeline requires RepositorySnapshot, got {type(snapshot)}")

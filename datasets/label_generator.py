@@ -71,8 +71,12 @@ class LabelGenerator:
 
         Enforces strict temporal anti-leakage: snapshot_future.snapshot_timestamp MUST exceed snapshot_t0.snapshot_timestamp.
         """
-        if not isinstance(snapshot_t0, RepositorySnapshot) or not isinstance(snapshot_future, RepositorySnapshot):
-            raise TypeError("generate_labels requires RepositorySnapshot instances for both t0 and future snapshots.")
+        if not isinstance(snapshot_t0, RepositorySnapshot) or not isinstance(
+            snapshot_future, RepositorySnapshot
+        ):
+            raise TypeError(
+                "generate_labels requires RepositorySnapshot instances for both t0 and future snapshots."
+            )
 
         # Temporal Causal Leakage Guard
         if snapshot_future.snapshot_timestamp <= snapshot_t0.snapshot_timestamp:

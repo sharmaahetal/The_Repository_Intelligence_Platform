@@ -48,14 +48,26 @@ def test_valid_temporal_label_generation():
     t0 = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
     t180 = datetime(2025, 7, 1, 0, 0, 0, tzinfo=UTC)
 
-    raw_t0 = {"name": "react", "owner": {"login": "facebook"}, "full_name": "facebook/react", "stargazers_count": 200000}
-    raw_future = {"name": "react", "owner": {"login": "facebook"}, "full_name": "facebook/react", "stargazers_count": 260000}
+    raw_t0 = {
+        "name": "react",
+        "owner": {"login": "facebook"},
+        "full_name": "facebook/react",
+        "stargazers_count": 200000,
+    }
+    raw_future = {
+        "name": "react",
+        "owner": {"login": "facebook"},
+        "full_name": "facebook/react",
+        "stargazers_count": 260000,
+    }
 
     snapshot_t0 = builder.build_snapshot_from_raw(raw_t0, snapshot_time=t0)
     snapshot_future = builder.build_snapshot_from_raw(raw_future, snapshot_time=t180)
 
     label_gen = LabelGenerator()
-    target_labels = label_gen.generate_labels(snapshot_t0, snapshot_future, horizon=PredictionHorizon.DAYS_180)
+    target_labels = label_gen.generate_labels(
+        snapshot_t0, snapshot_future, horizon=PredictionHorizon.DAYS_180
+    )
 
     assert target_labels.horizon == PredictionHorizon.DAYS_180
     assert target_labels.get("is_growth") is True

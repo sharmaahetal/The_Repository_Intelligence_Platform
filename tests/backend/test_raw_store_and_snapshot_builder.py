@@ -5,7 +5,6 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.raw_payload import RawRepositoryPayload
-from backend.app.models.snapshot import RepositorySnapshot
 from backend.app.raw_store.raw_payload_repository import RawPayloadRepository
 from backend.app.snapshots.snapshot_builder import SnapshotBuilder
 
@@ -39,20 +38,22 @@ def test_snapshot_builder_determinism_and_purity():
     builder = SnapshotBuilder()
     snapshot_time = datetime(2026, 8, 1, 12, 0, 0, tzinfo=UTC)
 
-    raw_payload = RawRepositoryPayload.from_dict({
-        "id": 98765,
-        "name": "scikit-learn",
-        "owner": {"login": "scikit-learn"},
-        "full_name": "scikit-learn/scikit-learn",
-        "stargazers_count": 55000,
-        "forks_count": 25000,
-        "open_issues_count": 1200,
-        "subscribers_count": 2000,
-        "language": "Python",
-        "license": {"spdx_id": "BSD-3-Clause"},
-        "created_at": "2010-01-01T00:00:00Z",
-        "updated_at": "2026-08-01T10:00:00Z",
-    })
+    raw_payload = RawRepositoryPayload.from_dict(
+        {
+            "id": 98765,
+            "name": "scikit-learn",
+            "owner": {"login": "scikit-learn"},
+            "full_name": "scikit-learn/scikit-learn",
+            "stargazers_count": 55000,
+            "forks_count": 25000,
+            "open_issues_count": 1200,
+            "subscribers_count": 2000,
+            "language": "Python",
+            "license": {"spdx_id": "BSD-3-Clause"},
+            "created_at": "2010-01-01T00:00:00Z",
+            "updated_at": "2026-08-01T10:00:00Z",
+        }
+    )
 
     snapshot_1 = builder.build_snapshot_from_raw(raw_payload, snapshot_time=snapshot_time)
     snapshot_2 = builder.build_snapshot_from_raw(raw_payload, snapshot_time=snapshot_time)

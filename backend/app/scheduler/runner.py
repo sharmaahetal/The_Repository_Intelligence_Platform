@@ -39,7 +39,10 @@ class PlatformScheduler:
             func=func,
         )
         self._jobs[job_id] = job
-        logger.info("Scheduled job registered", extra={"job_id": job_id, "job_name": name, "interval_s": interval_seconds})
+        logger.info(
+            "Scheduled job registered",
+            extra={"job_id": job_id, "job_name": name, "interval_s": interval_seconds},
+        )
 
     async def run_job_once(self, job_id: str) -> None:
         """Executes a single job immediately."""

@@ -42,7 +42,10 @@ class InferenceService:
                 )
                 if "v1.0" in self._loaded_engines:
                     return self._loaded_engines["v1.0"]
-                raise ModelUnavailableError(f"Model version '{version}' is unavailable in registry.", details={"version": version}) from exc
+                raise ModelUnavailableError(
+                    f"Model version '{version}' is unavailable in registry.",
+                    details={"version": version},
+                ) from exc
 
         return self._loaded_engines[version]
 

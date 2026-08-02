@@ -79,5 +79,9 @@ class RepositoryFeatures(BaseModel):
         # Search by plain feature name
         for feat in self.features.values():
             if feat.name == key:
-                return float(feat.value) if not isinstance(feat.value, bool) else (1.0 if feat.value else 0.0)
+                return (
+                    float(feat.value)
+                    if not isinstance(feat.value, bool)
+                    else (1.0 if feat.value else 0.0)
+                )
         return default

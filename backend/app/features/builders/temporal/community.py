@@ -12,9 +12,7 @@ class CommunityBuilder(BaseFeatureBuilder):
     version = 1
     description = "Computes community features"
 
-    async def compute(
-        self, snapshot: RepositorySnapshot, context: FeatureContext
-    ) -> list[Feature]:
+    async def compute(self, snapshot: RepositorySnapshot, context: FeatureContext) -> list[Feature]:
         return [
             Feature(
                 name="has_wiki_enabled",

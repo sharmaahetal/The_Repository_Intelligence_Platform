@@ -7,7 +7,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 def _get_git_commit_hash() -> str:
     try:
-        res = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=False)
+        res = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=False
+        )
         if res.returncode == 0 and res.stdout.strip():
             return res.stdout.strip()
     except Exception:

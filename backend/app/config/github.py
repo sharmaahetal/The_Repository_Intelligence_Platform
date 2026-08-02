@@ -8,11 +8,7 @@ class GitHubSettings(BaseSettings):
     REQUEST_TIMEOUT_SECONDS: int = 30
     MAX_RETRIES: int = 3
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
 github_settings = GitHubSettings()

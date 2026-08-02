@@ -60,12 +60,16 @@ class S3StorageProvider(ArtifactStorageProvider):
     def save_artifact(self, relative_path: str, data: bytes) -> str:
         s3_key = f"s3://{self.bucket}/{relative_path}"
         self._mock_memory_store[relative_path] = data
-        logger.info("Saved artifact to cloud object store", extra={"s3_key": s3_key, "bytes": len(data)})
+        logger.info(
+            "Saved artifact to cloud object store", extra={"s3_key": s3_key, "bytes": len(data)}
+        )
         return s3_key
 
     def load_artifact(self, relative_path: str) -> bytes:
         if relative_path not in self._mock_memory_store:
-            raise FileNotFoundError(f"S3 object '{relative_path}' not found in bucket '{self.bucket}'")
+            raise FileNotFoundError(
+                f"S3 object '{relative_path}' not found in bucket '{self.bucket}'"
+            )
         return self._mock_memory_store[relative_path]
 
     def artifact_exists(self, relative_path: str) -> bool:

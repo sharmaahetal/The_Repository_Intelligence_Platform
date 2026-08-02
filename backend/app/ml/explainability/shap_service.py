@@ -9,9 +9,7 @@ from backend.app.ml.dataset_loader import InMemoryDataset
 class ExplainabilityService:
     """Independent service computing post-training SHAP feature importances and summary metrics."""
 
-    def compute_feature_importances(
-        self, model: Any, dataset: InMemoryDataset
-    ) -> dict[str, float]:
+    def compute_feature_importances(self, model: Any, dataset: InMemoryDataset) -> dict[str, float]:
         """Computes feature importance values for trained model."""
         if len(dataset) == 0:
             raise ValueError("Cannot compute feature importances on empty dataset.")

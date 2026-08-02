@@ -1,6 +1,5 @@
 from unittest.mock import AsyncMock
 
-import httpx
 import pytest
 
 from backend.app.collectors.github_client import GitHubAPIClient, GitHubResponse

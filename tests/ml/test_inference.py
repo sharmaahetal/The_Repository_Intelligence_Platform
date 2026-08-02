@@ -32,7 +32,9 @@ def test_label_generator_and_inference_engine():
 
     # Generate targets
     label_gen = LabelGenerator()
-    labels = label_gen.generate_labels(snapshot_t0, snapshot_future, horizon=PredictionHorizon.DAYS_180)
+    labels = label_gen.generate_labels(
+        snapshot_t0, snapshot_future, horizon=PredictionHorizon.DAYS_180
+    )
 
     assert labels.get("is_growth") is True  # 30% > 25% threshold
     assert labels.get("is_abandoned") is False

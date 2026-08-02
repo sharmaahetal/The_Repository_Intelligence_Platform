@@ -22,7 +22,10 @@ def parse_rate_limit_headers(headers: dict[str, Any]) -> tuple[int | None, int |
     headers_lower = {str(k).lower(): str(v) for k, v in headers.items()}
 
     remaining = None
-    if "x-ratelimit-remaining" in headers_lower and headers_lower["x-ratelimit-remaining"].isdigit():
+    if (
+        "x-ratelimit-remaining" in headers_lower
+        and headers_lower["x-ratelimit-remaining"].isdigit()
+    ):
         remaining = int(headers_lower["x-ratelimit-remaining"])
 
     reset_time = None

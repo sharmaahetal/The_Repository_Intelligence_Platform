@@ -6,7 +6,7 @@ from backend.app.logging import logger
 class MetricsService:
     """Prometheus-style metrics collector tracking request counts, latencies, cache hit ratios, and model version usage."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.request_count: int = 0
         self.prediction_failures: int = 0
         self.cache_hits: int = 0
@@ -37,8 +37,12 @@ class MetricsService:
     def get_metrics_summary(self) -> dict[str, Any]:
         """Returns structured metrics summary."""
         total_cache_ops = self.cache_hits + self.cache_misses
-        cache_hit_ratio = round(self.cache_hits / total_cache_ops, 4) if total_cache_ops > 0 else 0.0
-        avg_latency = round(sum(self.latencies_ms) / len(self.latencies_ms), 2) if self.latencies_ms else 0.0
+        cache_hit_ratio = (
+            round(self.cache_hits / total_cache_ops, 4) if total_cache_ops > 0 else 0.0
+        )
+        avg_latency = (
+            round(sum(self.latencies_ms) / len(self.latencies_ms), 2) if self.latencies_ms else 0.0
+        )
 
         summary = {
             "request_count": self.request_count,

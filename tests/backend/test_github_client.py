@@ -79,13 +79,18 @@ async def test_github_client_retry_on_500_transient_error():
 
     mock_httpx.get.side_effect = [fail_response, success_response]
 
-    with patch("backend.app.collectors.github_client.calculate_exponential_backoff", return_value=0.001):
-        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-            async with GitHubAPIClient(token="token", client=mock_httpx) as client:
-                res = await client.get("repos/octocat/Hello-World")
-                assert res.status_code == 200
-                assert res.data["name"] == "Hello-World"
-                assert mock_sleep.called
+    with (
+        patch(
+            "backend.app.collectors.github_client.calculate_exponential_backoff", return_value=0.001
+        ),
+        patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+    ):
+        async with GitHubAPIClient(token="token", client=mock_httpx) as client:
+            res = await client.get("repos/octocat/Hello-World")
+            assert res.status_code == 200
+            assert isinstance(res.data, dict)
+            assert res.data["name"] == "Hello-World"
+            assert mock_sleep.called
 
 
 def test_retry_helpers():
@@ -100,11 +105,13 @@ def test_retry_helpers():
     backoff = calculate_exponential_backoff(attempt=1, base_delay=2.0)
     assert 2.0 <= backoff <= 4.0
 
-    rem, reset, retry_after = parse_rate_limit_headers({
-        "X-RateLimit-Remaining": "10",
-        "X-RateLimit-Reset": "1700000000",
-        "Retry-After": "5",
-    })
+    rem, reset, retry_after = parse_rate_limit_headers(
+        {
+            "X-RateLimit-Remaining": "10",
+            "X-RateLimit-Reset": "1700000000",
+            "Retry-After": "5",
+        }
+    )
     assert rem == 10
     assert reset == 1700000000
     assert retry_after == 5

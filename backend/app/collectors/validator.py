@@ -50,7 +50,9 @@ class RawPayloadValidator:
                 try:
                     datetime.fromisoformat(ts_val.replace("Z", "+00:00"))
                 except ValueError as exc:
-                    raise ValueError(f"Invalid timestamp format for '{ts_field}': '{ts_val}'") from exc
+                    raise ValueError(
+                        f"Invalid timestamp format for '{ts_field}': '{ts_val}'"
+                    ) from exc
 
         # Construct validated RawRepositoryPayload preserving headers & metadata
         payload = RawRepositoryPayload.from_dict(raw_data, headers=headers)

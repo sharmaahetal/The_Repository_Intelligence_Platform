@@ -36,7 +36,9 @@ class XGBoostTrainer:
                 eval_metric="logloss",
             )
         except ImportError:
-            logger.warning("XGBoost library not found. Falling back to Scikit-Learn GradientBoostingClassifier.")
+            logger.warning(
+                "XGBoost library not found. Falling back to Scikit-Learn GradientBoostingClassifier."
+            )
             from sklearn.ensemble import GradientBoostingClassifier  # type: ignore
 
             model = GradientBoostingClassifier(

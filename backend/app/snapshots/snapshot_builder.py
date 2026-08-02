@@ -40,23 +40,36 @@ class SnapshotBuilder:
         elif isinstance(raw_payload, dict):
             repo_dict = raw_payload
         else:
-            raise TypeError(f"raw_payload must be RawRepositoryPayload or dict, got {type(raw_payload)}")
+            raise TypeError(
+                f"raw_payload must be RawRepositoryPayload or dict, got {type(raw_payload)}"
+            )
 
         repo_id = repo_dict.get("id", 0)
         repo_name = repo_dict.get("name", "")
         owner_val = repo_dict.get("owner", {})
         owner = owner_val.get("login", "") if isinstance(owner_val, dict) else str(owner_val)
         full_name = repo_dict.get("full_name") or f"{owner}/{repo_name}"
-        stars = repo_dict.get("stargazers_count", 0)
-        forks = repo_dict.get("forks_count", 0)
-        watchers = repo_dict.get("subscribers_count") if repo_dict.get("subscribers_count") is not None else repo_dict.get("watchers_count", 0)
-        issues = repo_dict.get("open_issues_count", 0)
-        language = repo_dict.get("language") or "Unknown"
+        stars = int(repo_dict.get("stargazers_count") or 0)
+        forks = int(repo_dict.get("forks_count") or 0)
+        watchers_raw = (
+            repo_dict.get("subscribers_count")
+            if repo_dict.get("subscribers_count") is not None
+            else repo_dict.get("watchers_count", 0)
+        )
+        watchers = int(watchers_raw or 0)
+        issues = int(repo_dict.get("open_issues_count") or 0)
+        language = str(repo_dict.get("language") or "Unknown")
 
         license_val = repo_dict.get("license")
-        license_spdx = license_val.get("spdx_id") if isinstance(license_val, dict) else str(license_val) if license_val else None
+        license_spdx = (
+            license_val.get("spdx_id")
+            if isinstance(license_val, dict)
+            else str(license_val)
+            if license_val
+            else None
+        )
 
-        size_kb = repo_dict.get("size", 0)
+        size_kb = int(repo_dict.get("size") or 0)
         default_branch = repo_dict.get("default_branch", "main")
         has_wiki = repo_dict.get("has_wiki", False)
         has_pages = repo_dict.get("has_pages", False)

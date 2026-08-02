@@ -8,11 +8,7 @@ class AppSettings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     CORS_ORIGINS: list[str] = ["*"]
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
 settings = AppSettings()

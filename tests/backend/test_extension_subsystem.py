@@ -4,7 +4,9 @@ import re
 
 
 def test_extension_manifest_v3_validity():
-    manifest_path = os.path.join(os.path.dirname(__file__), "..", "..", "extension", "manifest.json")
+    manifest_path = os.path.join(
+        os.path.dirname(__file__), "..", "..", "extension", "manifest.json"
+    )
     manifest_path = os.path.abspath(manifest_path)
 
     assert os.path.exists(manifest_path), f"Manifest file missing at {manifest_path}"
@@ -33,7 +35,16 @@ def test_github_url_parser_rules():
         segments = [s for s in path.split("/") if s]
         if len(segments) < 2:
             return None
-        reserved = ["settings", "orgs", "notifications", "explore", "marketplace", "pulls", "issues", "search"]
+        reserved = [
+            "settings",
+            "orgs",
+            "notifications",
+            "explore",
+            "marketplace",
+            "pulls",
+            "issues",
+            "search",
+        ]
         if segments[0] in reserved:
             return None
         return {"owner": segments[0], "repo": segments[1]}
@@ -50,13 +61,21 @@ def test_github_url_parser_rules():
 
 
 def test_narrative_summary_generator_formatting():
-    def generate_narrative(owner: str, repo: str, growth_prob: float, health_index: int, drivers: list[str]) -> str:
-        header = f"Strong upward trajectory expected for {owner}/{repo}." if growth_prob >= 0.7 else f"Stable maintenance anticipated for {owner}/{repo}."
+    def generate_narrative(
+        owner: str, repo: str, growth_prob: float, health_index: int, drivers: list[str]
+    ) -> str:
+        header = (
+            f"Strong upward trajectory expected for {owner}/{repo}."
+            if growth_prob >= 0.7
+            else f"Stable maintenance anticipated for {owner}/{repo}."
+        )
         health = f"The derived health index stands at {health_index}/100 with a {int(growth_prob * 100)}% star growth probability over a 180-day horizon."
         drv = f" Key growth accelerators include: {drivers[0]}." if drivers else ""
         return f"{header} {health}{drv}"
 
-    narrative = generate_narrative("facebook", "react", 0.84, 88, ["Sustained core contributor retention rate"])
+    narrative = generate_narrative(
+        "facebook", "react", 0.84, 88, ["Sustained core contributor retention rate"]
+    )
     assert "Strong upward trajectory" in narrative
     assert "facebook/react" in narrative
     assert "88/100" in narrative

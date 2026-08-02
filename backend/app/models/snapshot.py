@@ -1,3 +1,4 @@
+from contextlib import suppress
 from datetime import UTC, datetime
 from typing import Any
 
@@ -5,7 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 
 class RepositorySnapshot(BaseModel):
-    """Pydantic immutable model representing point-in-time repository snapshot S(t_k)."""
+    """Immutable point-in-time snapshot of a GitHub repository S(t_k).
+
+    Used throughout the ML feature store and training pipeline to guarantee deterministic
+    feature computation, temporal anti-leakage guards, and reproducible datasets.
+    """
 
     model_config = ConfigDict(
         frozen=True,
@@ -49,13 +54,17 @@ class RepositorySnapshot(BaseModel):
     def handle_aliases_and_defaults(cls, data: Any) -> Any:
         if isinstance(data, dict):
             # Normalize string timestamps if passed as string ISO format
-            for dt_field in ("created_at", "updated_at", "snapshot_time", "snapshot_timestamp", "pushed_at"):
+            for dt_field in (
+                "created_at",
+                "updated_at",
+                "snapshot_time",
+                "snapshot_timestamp",
+                "pushed_at",
+            ):
                 val = data.get(dt_field)
                 if isinstance(val, str):
-                    try:
+                    with suppress(ValueError):
                         data[dt_field] = datetime.fromisoformat(val.replace("Z", "+00:00"))
-                    except ValueError:
-                        pass
 
             # Handle aliases for backwards compatibility
             if "snapshot_time" not in data and "snapshot_timestamp" in data:

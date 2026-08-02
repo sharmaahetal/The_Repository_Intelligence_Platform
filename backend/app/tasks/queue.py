@@ -27,7 +27,9 @@ class TaskQueue:
         self._tasks: dict[str, BackgroundTask] = {}
         self._handlers: dict[str, Callable[[dict[str, Any]], Awaitable[Any]]] = {}
 
-    def register_handler(self, task_name: str, handler: Callable[[dict[str, Any]], Awaitable[Any]]) -> None:
+    def register_handler(
+        self, task_name: str, handler: Callable[[dict[str, Any]], Awaitable[Any]]
+    ) -> None:
         """Register handler coroutine for named task."""
         self._handlers[task_name] = handler
 
@@ -56,18 +58,25 @@ class TaskQueue:
         if not handler:
             task.status = "failed"
             task.error = f"No registered handler for task name '{task.name}'"
-            logger.error("No handler registered for task", extra={"task_id": task.task_id, "task_name": task.name})
+            logger.error(
+                "No handler registered for task",
+                extra={"task_id": task.task_id, "task_name": task.name},
+            )
             return True
 
         try:
             result = await handler(task.payload)
             task.result = result
             task.status = "completed"
-            logger.info("Background task completed", extra={"task_id": task.task_id, "task_name": task.name})
+            logger.info(
+                "Background task completed", extra={"task_id": task.task_id, "task_name": task.name}
+            )
         except Exception as exc:
             task.status = "failed"
             task.error = str(exc)
-            logger.error("Background task failed", extra={"task_id": task.task_id, "error": str(exc)})
+            logger.error(
+                "Background task failed", extra={"task_id": task.task_id, "error": str(exc)}
+            )
 
         return True
 

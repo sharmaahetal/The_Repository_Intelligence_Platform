@@ -66,9 +66,13 @@ class DatasetExporter:
         # 1. Write Parquet file using pandas
         try:
             import pandas as pd  # type: ignore
+
             df = pd.DataFrame(rows)
             df.to_parquet(parquet_path, index=False)
-            logger.info("Exported dataset to Parquet format", extra={"parquet_path": parquet_path, "num_rows": len(rows)})
+            logger.info(
+                "Exported dataset to Parquet format",
+                extra={"parquet_path": parquet_path, "num_rows": len(rows)},
+            )
         except Exception as exc:
             logger.warning(
                 "Pandas/PyArrow export failed, falling back to JSON serialization",

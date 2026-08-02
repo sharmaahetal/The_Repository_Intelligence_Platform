@@ -40,9 +40,21 @@ class SnapshotNormalizer:
             if isinstance(snapshot.snapshot_timestamp, datetime)
             else str(snapshot.snapshot_timestamp)
         )
-        pushed_str = snapshot.pushed_at.isoformat() if isinstance(snapshot.pushed_at, datetime) else snapshot.pushed_at
-        created_str = snapshot.created_at.isoformat() if isinstance(snapshot.created_at, datetime) else snapshot.created_at
-        updated_str = snapshot.updated_at.isoformat() if isinstance(snapshot.updated_at, datetime) else snapshot.updated_at
+        pushed_str = (
+            snapshot.pushed_at.isoformat()
+            if isinstance(snapshot.pushed_at, datetime)
+            else snapshot.pushed_at
+        )
+        created_str = (
+            snapshot.created_at.isoformat()
+            if isinstance(snapshot.created_at, datetime)
+            else snapshot.created_at
+        )
+        updated_str = (
+            snapshot.updated_at.isoformat()
+            if isinstance(snapshot.updated_at, datetime)
+            else snapshot.updated_at
+        )
 
         data = NormalizedRepositoryData(
             owner=snapshot.owner,

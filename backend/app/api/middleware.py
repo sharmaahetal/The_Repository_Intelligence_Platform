@@ -20,7 +20,11 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
         # Extract repo path param if present
-        repo = request.path_params.get("repo", "unknown") if hasattr(request, "path_params") else "unknown"
+        repo = (
+            request.path_params.get("repo", "unknown")
+            if hasattr(request, "path_params")
+            else "unknown"
+        )
 
         logger.info(
             f"API Request [{request.method} {request.url.path}] -> {response.status_code}",

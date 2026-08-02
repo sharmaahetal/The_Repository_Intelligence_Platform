@@ -39,7 +39,12 @@ class PredictionPipeline:
         """Executes full end-to-end prediction pipeline and returns structured ForecastResponse."""
         logger.info(
             "Executing PredictionPipeline",
-            extra={"owner": owner, "repo": repo, "horizon": horizon, "model_version": model_version},
+            extra={
+                "owner": owner,
+                "repo": repo,
+                "horizon": horizon,
+                "model_version": model_version,
+            },
         )
 
         # 1. Fetch & Build Snapshot S(t_0)
@@ -60,9 +65,17 @@ class PredictionPipeline:
 
         # 6. Top Factors / Explainability
         top_factors = [
-            TopFactor(name="star_density_index", impact=0.35, description="High star accumulation velocity"),
-            TopFactor(name="fork_to_star_ratio", impact=0.25, description="Healthy contributor fork ratio"),
-            TopFactor(name="open_issue_density", impact=-0.10, description="Moderate open issue backlog"),
+            TopFactor(
+                name="star_density_index",
+                impact=0.35,
+                description="High star accumulation velocity",
+            ),
+            TopFactor(
+                name="fork_to_star_ratio", impact=0.25, description="Healthy contributor fork ratio"
+            ),
+            TopFactor(
+                name="open_issue_density", impact=-0.10, description="Moderate open issue backlog"
+            ),
         ]
 
         ts_str = (

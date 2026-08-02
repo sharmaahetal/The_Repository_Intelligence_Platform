@@ -27,7 +27,9 @@ class WalkForwardValidator:
     ) -> list[CrossValidationFold]:
         """Partitions InMemoryDataset into num_folds rolling time-series folds without overlap or future data leakage."""
         if len(dataset) < 4:
-            raise ValueError(f"Insufficient dataset samples ({len(dataset)}) to construct {num_folds} folds.")
+            raise ValueError(
+                f"Insufficient dataset samples ({len(dataset)}) to construct {num_folds} folds."
+            )
 
         sorted_indices = np.argsort([t.timestamp() for t in dataset.snapshot_times])
         X_sorted = dataset.X[sorted_indices]

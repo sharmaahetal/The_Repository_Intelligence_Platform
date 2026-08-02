@@ -25,14 +25,26 @@ def snapshot_pairs():
     t0_c = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
     tf_c = datetime(2025, 7, 1, 0, 0, 0, tzinfo=UTC)
 
-    snap_t0_a = builder.build_snapshot_from_raw({"name": "repo_a", "owner": {"login": "dev"}, "stargazers_count": 100}, snapshot_time=t0_a)
-    snap_tf_a = builder.build_snapshot_from_raw({"name": "repo_a", "owner": {"login": "dev"}, "stargazers_count": 150}, snapshot_time=tf_a)
+    snap_t0_a = builder.build_snapshot_from_raw(
+        {"name": "repo_a", "owner": {"login": "dev"}, "stargazers_count": 100}, snapshot_time=t0_a
+    )
+    snap_tf_a = builder.build_snapshot_from_raw(
+        {"name": "repo_a", "owner": {"login": "dev"}, "stargazers_count": 150}, snapshot_time=tf_a
+    )
 
-    snap_t0_b = builder.build_snapshot_from_raw({"name": "repo_b", "owner": {"login": "dev"}, "stargazers_count": 200}, snapshot_time=t0_b)
-    snap_tf_b = builder.build_snapshot_from_raw({"name": "repo_b", "owner": {"login": "dev"}, "stargazers_count": 220}, snapshot_time=tf_b)
+    snap_t0_b = builder.build_snapshot_from_raw(
+        {"name": "repo_b", "owner": {"login": "dev"}, "stargazers_count": 200}, snapshot_time=t0_b
+    )
+    snap_tf_b = builder.build_snapshot_from_raw(
+        {"name": "repo_b", "owner": {"login": "dev"}, "stargazers_count": 220}, snapshot_time=tf_b
+    )
 
-    snap_t0_c = builder.build_snapshot_from_raw({"name": "repo_c", "owner": {"login": "dev"}, "stargazers_count": 500}, snapshot_time=t0_c)
-    snap_tf_c = builder.build_snapshot_from_raw({"name": "repo_c", "owner": {"login": "dev"}, "stargazers_count": 700}, snapshot_time=tf_c)
+    snap_t0_c = builder.build_snapshot_from_raw(
+        {"name": "repo_c", "owner": {"login": "dev"}, "stargazers_count": 500}, snapshot_time=t0_c
+    )
+    snap_tf_c = builder.build_snapshot_from_raw(
+        {"name": "repo_c", "owner": {"login": "dev"}, "stargazers_count": 700}, snapshot_time=tf_c
+    )
 
     return [
         (snap_t0_a, snap_tf_a),
@@ -81,15 +93,27 @@ def test_dataset_validator_rejects_duplicates_and_nan():
     validator = DatasetValidator()
 
     bad_duplicate_rows = [
-        {"full_name": "owner/repo", "snapshot_time": "2025-01-01T00:00:00+00:00", "prediction_horizon_days": 180},
-        {"full_name": "owner/repo", "snapshot_time": "2025-01-01T00:00:00+00:00", "prediction_horizon_days": 180},
+        {
+            "full_name": "owner/repo",
+            "snapshot_time": "2025-01-01T00:00:00+00:00",
+            "prediction_horizon_days": 180,
+        },
+        {
+            "full_name": "owner/repo",
+            "snapshot_time": "2025-01-01T00:00:00+00:00",
+            "prediction_horizon_days": 180,
+        },
     ]
 
     with pytest.raises(ValueError, match="Duplicate"):
         validator.validate_dataset_rows(bad_duplicate_rows)
 
     bad_nan_rows = [
-        {"full_name": "owner/repo1", "snapshot_time": "2025-01-01T00:00:00+00:00", "star_ratio": float("nan")}
+        {
+            "full_name": "owner/repo1",
+            "snapshot_time": "2025-01-01T00:00:00+00:00",
+            "star_ratio": float("nan"),
+        }
     ]
 
     with pytest.raises(ValueError, match="non-finite"):

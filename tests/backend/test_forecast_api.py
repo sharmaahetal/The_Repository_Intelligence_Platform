@@ -21,7 +21,14 @@ def test_get_repository_forecast_endpoint():
         snapshot_time=datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC),
     )
 
-    with patch.object(_SNAPSHOT_SERVICE, "collect_and_build_snapshot", new=AsyncMock(return_value=mock_snapshot)), patch.object(_SNAPSHOT_SERVICE, "get_snapshot", new=AsyncMock(return_value=mock_snapshot)):
+    with (
+        patch.object(
+            _SNAPSHOT_SERVICE,
+            "collect_and_build_snapshot",
+            new=AsyncMock(return_value=mock_snapshot),
+        ),
+        patch.object(_SNAPSHOT_SERVICE, "get_snapshot", new=AsyncMock(return_value=mock_snapshot)),
+    ):
         response = client.get("/api/v1/forecast/microsoft/vscode?horizon=180")
         assert response.status_code == 200
         data = response.json()

@@ -7,11 +7,7 @@ class DatabaseSettings(BaseSettings):
     DB_MAX_OVERFLOW: int = 10
     DB_ECHO: bool = False
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
 db_settings = DatabaseSettings()
