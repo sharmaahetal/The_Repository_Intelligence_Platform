@@ -4,18 +4,54 @@ from typing import Any
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from backend.app.logging import get_request_context, logger
+
+
+class ErrorBody(BaseModel):
+    """Encapsulated error object details."""
+
+    model_config = ConfigDict(frozen=True)
+
+    code: str
+    message: str
+    request_id: str = "unknown"
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class ErrorResponse(BaseModel):
     """Standardized JSON error response body across all API endpoints."""
 
+    model_config = ConfigDict(frozen=True)
+
     error_code: str
     message: str
+    error: ErrorBody
     details: dict[str, Any] = Field(default_factory=dict)
     timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+
+    def __init__(
+        self,
+        error_code: str | None = None,
+        message: str = "",
+        request_id: str = "unknown",
+        error: ErrorBody | None = None,
+        details: dict[str, Any] | None = None,
+        **data: Any,
+    ):
+        code = error_code or (error.code if error else data.get("error_code")) or "INTERNAL_SERVER_ERROR"
+        msg = message or (error.message if error else data.get("message")) or ""
+        req_id = request_id or (error.request_id if error else data.get("request_id")) or "unknown"
+        err_body = error or ErrorBody(code=code, message=msg, request_id=req_id)
+
+        super().__init__(
+            error_code=code,
+            message=msg,
+            error=err_body,
+            details=details or {},
+            **data,
+        )
 
 
 # Domain Application Exceptions
@@ -57,7 +93,7 @@ def _log_exception_context(
     exc: Exception,
     error_code: str,
     status_code: int,
-) -> None:
+) -> str:
     """Helper logging rich exception context including request_id, endpoint, stacktrace, user_agent, repository, and model_version."""
     ctx = get_request_context()
     request_id = getattr(request.state, "request_id", None) or ctx.get("request_id", "unknown")
@@ -91,6 +127,7 @@ def _log_exception_context(
         },
         exc_info=True,
     )
+    return request_id
 
 
 def register_exception_handlers(app: FastAPI) -> None:
@@ -98,60 +135,65 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RepositoryNotFoundError)
     async def repo_not_found_handler(request: Request, exc: RepositoryNotFoundError):
-        _log_exception_context(request, exc, "REPOSITORY_NOT_FOUND", status.HTTP_404_NOT_FOUND)
+        req_id = _log_exception_context(request, exc, "REPOSITORY_NOT_FOUND", status.HTTP_404_NOT_FOUND)
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content=ErrorResponse(
                 error_code="REPOSITORY_NOT_FOUND",
                 message=exc.message,
+                request_id=req_id,
                 details=exc.details,
             ).model_dump(),
         )
 
     @app.exception_handler(SnapshotNotFoundError)
     async def snapshot_not_found_handler(request: Request, exc: SnapshotNotFoundError):
-        _log_exception_context(request, exc, "SNAPSHOT_NOT_FOUND", status.HTTP_404_NOT_FOUND)
+        req_id = _log_exception_context(request, exc, "SNAPSHOT_NOT_FOUND", status.HTTP_404_NOT_FOUND)
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content=ErrorResponse(
                 error_code="SNAPSHOT_NOT_FOUND",
                 message=exc.message,
+                request_id=req_id,
                 details=exc.details,
             ).model_dump(),
         )
 
     @app.exception_handler(ModelUnavailableError)
     async def model_unavailable_handler(request: Request, exc: ModelUnavailableError):
-        _log_exception_context(request, exc, "MODEL_UNAVAILABLE", status.HTTP_503_SERVICE_UNAVAILABLE)
+        req_id = _log_exception_context(request, exc, "MODEL_UNAVAILABLE", status.HTTP_503_SERVICE_UNAVAILABLE)
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content=ErrorResponse(
                 error_code="MODEL_UNAVAILABLE",
                 message=exc.message,
+                request_id=req_id,
                 details=exc.details,
             ).model_dump(),
         )
 
     @app.exception_handler(PredictionError)
     async def prediction_error_handler(request: Request, exc: PredictionError):
-        _log_exception_context(request, exc, "PREDICTION_ERROR", status.HTTP_500_INTERNAL_SERVER_ERROR)
+        req_id = _log_exception_context(request, exc, "PREDICTION_ERROR", status.HTTP_500_INTERNAL_SERVER_ERROR)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=ErrorResponse(
                 error_code="PREDICTION_ERROR",
                 message=exc.message,
+                request_id=req_id,
                 details=exc.details,
             ).model_dump(),
         )
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
-        _log_exception_context(request, exc, "INTERNAL_SERVER_ERROR", status.HTTP_500_INTERNAL_SERVER_ERROR)
+        req_id = _log_exception_context(request, exc, "INTERNAL_SERVER_ERROR", status.HTTP_500_INTERNAL_SERVER_ERROR)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=ErrorResponse(
                 error_code="INTERNAL_SERVER_ERROR",
                 message="An unexpected internal error occurred.",
+                request_id=req_id,
                 details={},
             ).model_dump(),
         )
