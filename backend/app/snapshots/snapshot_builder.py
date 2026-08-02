@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from backend.app.logging import logger
+from backend.app.models.metadata import SnapshotMetadata, compute_snapshot_id
 from backend.app.models.raw_payload import RawRepositoryPayload
 from backend.app.models.snapshot import RepositorySnapshot
 
@@ -37,8 +38,12 @@ class SnapshotBuilder:
 
         if isinstance(raw_payload, RawRepositoryPayload):
             repo_dict = raw_payload.raw_json
+            req_id_val = request_id or raw_payload.request_id
+            etag_val = raw_payload.etag
         elif isinstance(raw_payload, dict):
             repo_dict = raw_payload
+            req_id_val = request_id
+            etag_val = None
         else:
             raise TypeError(
                 f"raw_payload must be RawRepositoryPayload or dict, got {type(raw_payload)}"
@@ -78,8 +83,19 @@ class SnapshotBuilder:
         created_at = repo_dict.get("created_at")
         updated_at = repo_dict.get("updated_at")
 
+        schema_version = 1
+        snapshot_id = compute_snapshot_id(repo_id, snapshot_time_utc, schema_version)
+
+        metadata = SnapshotMetadata(
+            snapshot_id=snapshot_id,
+            snapshot_time=snapshot_time_utc,
+            schema_version=schema_version,
+            collector_version="1.0.0",
+            request_id=req_id_val,
+            etag=etag_val,
+        )
+
         snapshot = RepositorySnapshot(
-            schema_version=1,
             repository_id=repo_id,
             owner=owner,
             name=repo_name,
@@ -97,7 +113,7 @@ class SnapshotBuilder:
             pushed_at=pushed_at,
             created_at=created_at,
             updated_at=updated_at,
-            snapshot_time=snapshot_time_utc,
+            metadata=metadata,
         )
 
         logger.info(
@@ -105,7 +121,8 @@ class SnapshotBuilder:
             extra={
                 "owner": owner,
                 "repo": repo_name,
-                "request_id": request_id,
+                "request_id": req_id_val,
+                "snapshot_id": snapshot_id,
                 "snapshot_time": snapshot_time_utc.isoformat(),
             },
         )
