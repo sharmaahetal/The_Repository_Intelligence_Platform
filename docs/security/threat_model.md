@@ -34,4 +34,5 @@ This document details the security posture, threat model, and defense-in-depth c
 - **Threat**: GitHub PAT or database connection strings leaked in client extension bundles or source repositories.
 - **Mitigation**:
   - Extension bundle contains zero API keys or authentication tokens.
-  - Backend secrets managed exclusively via `SecretsManager` environment variables or secret vaults.
+  - Backend secrets managed exclusively via `SecretsManager` backed by extensible `SecretProvider` interfaces (`EnvProvider`, `VaultProvider`, AWS/Vault integrations) with `MissingSecretError` protection against missing production secrets.
+  - CORS policies strictly block wildcard (`*`) origins in `production` environment via `AppConfig` validators.
