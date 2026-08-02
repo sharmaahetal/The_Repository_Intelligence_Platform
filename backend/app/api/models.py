@@ -1,3 +1,4 @@
+import uuid
 from datetime import UTC, datetime
 from typing import Any
 
@@ -32,6 +33,7 @@ class ForecastResponse(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
+    prediction_id: str = Field(default_factory=lambda: f"pred_{uuid.uuid4().hex[:12]}")
     repository: str
     owner: str
     repo: str
@@ -51,6 +53,7 @@ class ForecastResponse(BaseModel):
     lineage: DataLineage | None = Field(default=None)
 
     cached: bool = Field(default=False)
+    latency_ms: float = Field(default=0.0)
 
 
 class HealthResponse(BaseModel):
