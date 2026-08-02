@@ -1,30 +1,46 @@
-import os
-
+from backend.app.config.providers.env import EnvProvider
+from backend.app.config.providers.interface import SecretProvider
+from backend.app.config.providers.vault import VaultProvider
 from backend.app.logging import logger
 
 
+class MissingSecretError(Exception):
+    """Raised when a required secret cannot be resolved from any registered SecretProvider."""
+
+    pass
+
+
 class SecretsManager:
-    """Hierarchical secrets configuration manager prioritizing OS env, Vault/Cloud Secrets, and .env fallbacks."""
+    """Manages secret resolution across pluggable SecretProvider backends."""
 
-    def __init__(self, vault_backend: str | None = None) -> None:
-        self.vault_backend = vault_backend or os.getenv("SECRETS_VAULT_BACKEND", "env")
-        self._vault_mock_store: dict[str, str] = {
-            "GITHUB_TOKEN": os.getenv("GITHUB_TOKEN", "mock_github_pat_token_12345"),
-            "DATABASE_URL": os.getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:"),
-            "REDIS_URL": os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-        }
+    def __init__(self, providers: list[SecretProvider] | None = None) -> None:
+        self.providers: list[SecretProvider] = (
+            providers if providers is not None else [EnvProvider(), VaultProvider()]
+        )
 
-    def get_secret(self, key: str, default: str = "") -> str:
-        """Resolves secret from OS environment, vault store, or fallback default."""
-        # 1. Check OS Environment Variables
-        if key in os.environ:
-            return os.environ[key]
+    def get_secret(self, key: str, default: str | None = None, required: bool = False) -> str:
+        """Resolves secret from registered providers in priority order.
 
-        # 2. Check Vault Store
-        if key in self._vault_mock_store:
-            return self._vault_mock_store[key]
+        Args:
+            key: Secret key to retrieve.
+            default: Default value if not found in any provider.
+            required: If True, raises MissingSecretError when key is not found.
 
-        logger.debug("Secret key not found in environment or vault", extra={"key": key})
+        Raises:
+            MissingSecretError: If key is required or no default is provided and key is missing.
+        """
+        for provider in self.providers:
+            val = provider.get_secret(key)
+            if val is not None:
+                return val
+
+        if required or default is None:
+            logger.error("Required secret key not found in any provider", extra={"key": key})
+            raise MissingSecretError(
+                f"Secret key '{key}' was not found in any registered SecretProvider."
+            )
+
+        logger.debug("Secret key not found, returning default fallback", extra={"key": key})
         return default
 
 
