@@ -6,7 +6,7 @@ from backend.app.models.snapshot import RepositorySnapshot
 
 
 class FeaturePipeline:
-    """Active orchestrator computing features from snapshots via registered builders."""
+    """Active orchestrator computing features from snapshots via registered builders and DAG execution."""
 
     def __init__(
         self,
@@ -25,14 +25,29 @@ class FeaturePipeline:
         builders = self.registry.get_builders()
         features_dict = {}
 
+        # Sort builders using DAG if feature definitions are declared
+        dag = self.registry.get_dag()
+        if dag.definitions:
+            with_order = dag.topological_sort()
+            logger.info("Executing Feature DAG in topological order", extra={"order": with_order})
+
         for builder in builders:
             try:
                 computed_list = await builder.compute(snapshot, context)
                 for feat in computed_list:
+                    # Inject deterministic provenance metadata
+                    updated_feat = feat.model_copy(
+                        update={
+                            "builder": getattr(builder, "name", "unknown_builder"),
+                            "source_snapshot_id": snapshot.snapshot_id,
+                            "created_at": snapshot.snapshot_timestamp,
+                        }
+                    )
+
                     # Validate feature bounds & non-NaN sanity
-                    self.validator.validate_feature(feat)
-                    context.add_feature(feat)
-                    features_dict[feat.feature_key] = feat
+                    self.validator.validate_feature(updated_feat)
+                    context.add_feature(updated_feat)
+                    features_dict[updated_feat.feature_key] = updated_feat
             except Exception as exc:
                 logger.warning(
                     "Error executing feature builder",
@@ -69,7 +84,6 @@ class FeaturePipeline:
             loop = None
 
         if loop and loop.is_running():
-            # If running inside an existing event loop, create task or execute directly
             import nest_asyncio  # type: ignore
 
             nest_asyncio.apply()

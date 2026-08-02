@@ -1,20 +1,27 @@
 import math
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from backend.app.features.groups import FeatureGroup
+
 
 class Feature(BaseModel):
-    """Pydantic immutable model representing a single versioned feature with metadata."""
+    """Pydantic immutable model representing a single versioned feature with metadata and provenance."""
 
     model_config = ConfigDict(frozen=True)
 
     name: str
-    value: float | int | bool
-    dtype: str = Field(default="float32")  # 'float32', 'int32', 'bool'
-    version: int = Field(default=1)
+    value: float | int | bool | str | None
+    dtype: str = Field(default="float32")  # 'float32', 'int32', 'bool', 'string'
+    version: int | str = Field(default=1)
+    group: FeatureGroup = Field(default=FeatureGroup.ACTIVITY)
+    builder: str = Field(default="unknown_builder")
+    source_snapshot_id: str | None = None
+    dependencies: list[str] = Field(default_factory=list)
     description: str = Field(default="")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def feature_key(self) -> str:
@@ -23,7 +30,7 @@ class Feature(BaseModel):
 
     @field_validator("value")
     @classmethod
-    def validate_non_nan_or_inf(cls, v: float | int | bool) -> float | int | bool:
+    def validate_non_nan_or_inf(cls, v: float | int | bool | str | None) -> float | int | bool | str | None:
         """Sanity check to prevent NaN or Infinity values."""
         if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
             raise ValueError(f"Feature value cannot be NaN or Infinity, got {v}")
@@ -67,7 +74,7 @@ class RepositoryFeatures(BaseModel):
         for _feat_key, feat in self.features.items():
             if isinstance(feat.value, bool):
                 vector[feat.name] = 1.0 if feat.value else 0.0
-            else:
+            elif isinstance(feat.value, int | float):
                 vector[feat.name] = float(feat.value)
         return vector
 
@@ -75,13 +82,17 @@ class RepositoryFeatures(BaseModel):
         """Convenience accessor for feature values by name or feature_key."""
         if key in self.features:
             val = self.features[key].value
-            return float(val) if not isinstance(val, bool) else (1.0 if val else 0.0)
+            if isinstance(val, bool):
+                return 1.0 if val else 0.0
+            if isinstance(val, int | float):
+                return float(val)
+
         # Search by plain feature name
         for feat in self.features.values():
             if feat.name == key:
-                return (
-                    float(feat.value)
-                    if not isinstance(feat.value, bool)
-                    else (1.0 if feat.value else 0.0)
-                )
+                val = feat.value
+                if isinstance(val, bool):
+                    return 1.0 if val else 0.0
+                if isinstance(val, int | float):
+                    return float(val)
         return default
