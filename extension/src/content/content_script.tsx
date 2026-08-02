@@ -1,51 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { ForecastCard } from '../components/ForecastCard';
-import { MessagingService } from '../messaging/service';
-import { ForecastPayload } from '../messaging/types';
+import { ForecastCard } from '../features/prediction/ForecastCard';
+import { useForecastStore } from '../state/useForecastStore';
 import { GitHubNavigationObserver, RepositoryContext } from './context';
+import '../styles/tokens.css';
 
-console.log('[RIP Extension] Thin Content Script loaded.');
-
-const messaging = new MessagingService();
+console.log('[RIP Extension] Content Script initialized.');
 
 interface ForecastContainerProps {
   context: RepositoryContext;
 }
 
 const ForecastContainer: React.FC<ForecastContainerProps> = ({ context }) => {
-  const [payload, setPayload] = useState<ForecastPayload | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchForecast = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await messaging.sendMessage<{ owner: string; repo: string; horizon: number }, ForecastPayload>(
-        'FETCH_FORECAST',
-        { owner: context.owner, repo: context.repo, horizon: 180 }
-      );
-      setPayload(data);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch repository forecast');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const setRepo = useForecastStore((s) => s.setRepo);
 
   useEffect(() => {
-    fetchForecast();
-  }, [context.owner, context.repo]);
+    setRepo(context.owner, context.repo);
+  }, [context.owner, context.repo, setRepo]);
 
-  return (
-    <ForecastCard
-      payload={payload}
-      loading={loading}
-      error={error}
-      onRetry={fetchForecast}
-    />
-  );
+  return <ForecastCard />;
 };
 
 let reactRoot: ReactDOM.Root | null = null;

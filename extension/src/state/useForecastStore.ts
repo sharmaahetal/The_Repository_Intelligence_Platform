@@ -1,30 +1,22 @@
 import { create } from 'zustand';
 import { fetchForecastReport } from '../services/api';
-
-export interface ForecastData {
-  owner: string;
-  repo: string;
-  predictionHorizonDays: number;
-  healthIndex: number;
-  growthProbability: number;
-  abandonmentProbability: number;
-  maintainerRetentionProbability: number;
-  narrativeSummary: string;
-  topDrivers: string[];
-  topRisks: string[];
-  modelVersion: string;
-}
+import { mapForecastDtoToUiModel } from '../services/mapper';
+import { getStoredForecast, setStoredForecast } from '../services/storage';
+import { ForecastUIModel } from '../types/ui_model';
 
 interface ForecastState {
   currentRepo: { owner: string; repo: string } | null;
   horizonDays: number;
-  forecast: ForecastData | null;
+  forecast: ForecastUIModel | null;
   loading: boolean;
   error: string | null;
+  isOffline: boolean;
+  lastCachedAt: string | null;
 
   setRepo: (owner: string, repo: string) => void;
   setHorizonDays: (days: number) => void;
   fetchForecast: (owner: string, repo: string, horizon: number) => Promise<void>;
+  clearError: () => void;
 }
 
 export const useForecastStore = create<ForecastState>((set, get) => ({
@@ -33,6 +25,8 @@ export const useForecastStore = create<ForecastState>((set, get) => ({
   forecast: null,
   loading: false,
   error: null,
+  isOffline: false,
+  lastCachedAt: null,
 
   setRepo: (owner, repo) => {
     set({ currentRepo: { owner, repo } });
@@ -47,28 +41,58 @@ export const useForecastStore = create<ForecastState>((set, get) => ({
     }
   },
 
-  fetchForecast: async (owner, repo, horizon) => {
-    set({ loading: true, error: null });
-    try {
-      const apiData = await fetchForecastReport(owner, repo, horizon);
-      
-      const forecast: ForecastData = {
-        owner: apiData.owner,
-        repo: apiData.repo,
-        predictionHorizonDays: apiData.prediction_horizon_days,
-        healthIndex: apiData.derived_health_index,
-        growthProbability: apiData.growth_probability,
-        abandonmentProbability: apiData.abandonment_probability,
-        maintainerRetentionProbability: apiData.maintainer_retention_probability,
-        narrativeSummary: apiData.narrative_summary,
-        topDrivers: apiData.top_drivers,
-        topRisks: apiData.top_risks,
-        modelVersion: apiData.model_version,
-      };
+  clearError: () => set({ error: null }),
 
-      set({ forecast, loading: false });
+  fetchForecast: async (owner, repo, horizon) => {
+    set({ loading: true, error: null, isOffline: false });
+
+    // 1. Check extension storage cache (valid TTL)
+    const cached = await getStoredForecast(owner, repo, horizon);
+    if (cached && !cached.isStale) {
+      set({
+        forecast: cached.forecast,
+        loading: false,
+        isOffline: false,
+        lastCachedAt: cached.forecast.cachedTimestamp || null,
+      });
+      return;
+    }
+
+    // 2. Fetch from backend API
+    try {
+      const dto = await fetchForecastReport(owner, repo, horizon);
+      const uiModel = mapForecastDtoToUiModel(dto);
+
+      // Save to storage cache
+      await setStoredForecast(owner, repo, horizon, uiModel);
+
+      set({
+        forecast: uiModel,
+        loading: false,
+        isOffline: false,
+        lastCachedAt: null,
+      });
     } catch (err: any) {
-      set({ error: err.message || 'Failed to fetch forecast report', loading: false });
+      console.warn('[RIP Extension] Backend API fetch failed, checking offline fallback cache:', err);
+
+      // 3. Fallback to stale storage entry if offline
+      const staleCached = await getStoredForecast(owner, repo, horizon, true);
+      if (staleCached) {
+        set({
+          forecast: staleCached.forecast,
+          loading: false,
+          isOffline: true,
+          lastCachedAt: staleCached.forecast.cachedTimestamp || new Date().toISOString(),
+          error: null,
+        });
+      } else {
+        set({
+          error: err.message || 'Failed to fetch repository forecast',
+          loading: false,
+          isOffline: true,
+          lastCachedAt: null,
+        });
+      }
     }
   },
 }));
