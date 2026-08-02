@@ -2,13 +2,13 @@ from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from backend.app.config import db_settings
+from backend.app.config import settings
 
 engine = create_async_engine(
-    db_settings.DATABASE_URL,
-    echo=db_settings.DB_ECHO,
-    pool_size=db_settings.DB_POOL_SIZE,
-    max_overflow=db_settings.DB_MAX_OVERFLOW,
+    settings.database.url,
+    echo=settings.database.echo,
+    pool_size=settings.database.pool_size,
+    max_overflow=settings.database.max_overflow,
 )
 
 AsyncSessionLocal = async_sessionmaker(

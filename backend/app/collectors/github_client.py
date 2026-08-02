@@ -11,7 +11,7 @@ from backend.app.collectors.retry import (
     is_retryable_status,
     parse_rate_limit_headers,
 )
-from backend.app.config import github_settings
+from backend.app.config import settings
 from backend.app.logging import logger
 
 
@@ -35,9 +35,9 @@ class GitHubAPIClient:
         token: str | None = None,
         client: httpx.AsyncClient | None = None,
     ):
-        self.token = token or github_settings.GITHUB_TOKEN
-        self.base_url = github_settings.GITHUB_API_URL
-        self.timeout = github_settings.REQUEST_TIMEOUT_SECONDS
+        self.token = token or settings.github.token
+        self.base_url = settings.github.api_url
+        self.timeout = settings.github.request_timeout_seconds
         self._client = client
         self._owns_client = client is None
 
@@ -111,7 +111,7 @@ class GitHubAPIClient:
             else (parts[1] if len(parts) >= 2 else "unknown")
         )
 
-        max_retries = github_settings.MAX_RETRIES
+        max_retries = settings.github.max_retries
 
         for attempt in range(1, max_retries + 1):
             start_time = time.perf_counter()
