@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import subprocess
@@ -15,6 +16,7 @@ class DatasetManifest(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     dataset_version: str = Field(default="v1.0")
+    dataset_hash: str = Field(default="", description="SHA-256 cryptographic content digest")
     snapshot_schema: int = Field(default=1)
     feature_schema: int = Field(default=1)
     label_schema: int = Field(default=1)
@@ -47,6 +49,13 @@ class DatasetExporter:
             return res.stdout.strip()
         except Exception:
             return "unknown"
+
+    def _compute_file_hash(self, file_path: str) -> str:
+        hasher = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            while chunk := f.read(8192):
+                hasher.update(chunk)
+        return hasher.hexdigest()
 
     def export_dataset(
         self,
@@ -82,9 +91,13 @@ class DatasetExporter:
             with open(parquet_path, "w", encoding="utf-8") as f:
                 json.dump(rows, f, indent=2)
 
+        # Compute SHA-256 content hash of exported dataset file
+        file_hash = self._compute_file_hash(parquet_path)
+
         # 2. Write Manifest JSON
         manifest = DatasetManifest(
             dataset_version=dataset_version,
+            dataset_hash=file_hash,
             snapshot_schema=1,
             feature_schema=1,
             label_schema=1,
@@ -97,5 +110,8 @@ class DatasetExporter:
         with open(manifest_path, "w", encoding="utf-8") as f:
             f.write(manifest.model_dump_json(indent=2))
 
-        logger.info("Exported DatasetManifest metadata", extra={"manifest_path": manifest_path})
+        logger.info(
+            "Exported DatasetManifest metadata",
+            extra={"manifest_path": manifest_path, "dataset_hash": file_hash[:12]},
+        )
         return parquet_path, manifest_path
