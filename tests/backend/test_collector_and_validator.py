@@ -87,4 +87,4 @@ async def test_repository_collector_orchestration():
     assert payload.name == "react"
     assert payload.owner_login == "facebook"
     assert payload.stargazers_count == 210000
-    mock_client.get.assert_called_once_with("repos/facebook/react", request_id="req-999", etag=None)
+    mock_client.get.assert_called_once_with("repos/facebook/react", request_id="req-999", etag=None, last_modified=None)

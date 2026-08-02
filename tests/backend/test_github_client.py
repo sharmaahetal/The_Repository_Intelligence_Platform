@@ -81,7 +81,7 @@ async def test_github_client_retry_on_500_transient_error():
 
     with (
         patch(
-            "backend.app.collectors.github_client.calculate_exponential_backoff", return_value=0.001
+            "backend.app.collectors.retry.RetryPolicy.calculate_backoff", return_value=0.001
         ),
         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
     ):
