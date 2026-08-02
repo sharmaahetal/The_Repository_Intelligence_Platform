@@ -27,6 +27,7 @@ class RepositoryCollector:
         repo: str,
         request_id: str | None = None,
         etag: str | None = None,
+        last_modified: str | None = None,
     ) -> GitHubResponse:
         """Fetch raw primary repository response from /repos/{owner}/{repo}."""
         logger.info(
@@ -34,9 +35,11 @@ class RepositoryCollector:
             extra={"owner": owner, "repo": repo, "request_id": request_id},
         )
         endpoint = f"repos/{owner}/{repo}"
-        response = await self.client.get(endpoint, request_id=request_id, etag=etag)
+        response = await self.client.get(
+            endpoint, request_id=request_id, etag=etag, last_modified=last_modified
+        )
 
-        if not isinstance(response.data, dict) and response.status_code != 304:
+        if not isinstance(response.data, dict) and not response.is_not_modified:
             raise ValueError(f"Unexpected response format from GitHub API for {owner}/{repo}")
 
         return response
@@ -47,10 +50,11 @@ class RepositoryCollector:
         repo: str,
         request_id: str | None = None,
         etag: str | None = None,
+        last_modified: str | None = None,
     ) -> RawRepositoryPayload:
         """Orchestrate collection pipeline: fetch payload via GitHubClient -> validate via Validator."""
         response = await self.fetch_repository(
-            owner=owner, repo=repo, request_id=request_id, etag=etag
+            owner=owner, repo=repo, request_id=request_id, etag=etag, last_modified=last_modified
         )
 
         raw_dict: dict[str, Any] = response.data if isinstance(response.data, dict) else {}

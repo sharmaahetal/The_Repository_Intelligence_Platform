@@ -1,16 +1,21 @@
 import asyncio
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
 
-from backend.app.collectors.retry import (
-    calculate_exponential_backoff,
-    calculate_rate_limit_sleep,
-    is_retryable_status,
-    parse_rate_limit_headers,
+from backend.app.collectors.circuit_breaker import CircuitBreaker
+from backend.app.collectors.exceptions import (
+    GitHubError,
+    NetworkError,
+    RateLimitExceeded,
+    RepositoryNotFound,
+    Unauthorized,
 )
+from backend.app.collectors.rate_limiter import RateLimiter
+from backend.app.collectors.retry import RetryPolicy
 from backend.app.config import settings
 from backend.app.logging import logger
 
@@ -23,23 +28,38 @@ class GitHubResponse:
     headers: dict[str, str]
     status_code: int
     etag: str | None = None
+    last_modified: str | None = None
     rate_limit_remaining: int | None = None
     api_version: str | None = None
+    snapshot_time: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+
+    @property
+    def is_not_modified(self) -> bool:
+        """Return True if HTTP response status is 304 Not Modified."""
+        return self.status_code == 304
 
 
 class GitHubAPIClient:
-    """Async HTTP client for GitHub API with connection pooling, retry backoff with jitter, ETag 304, and rate limits."""
+    """Async HTTP client for GitHub API with connection pooling, RetryPolicy, CircuitBreaker, RateLimiter, and ETags."""
 
     def __init__(
         self,
         token: str | None = None,
         client: httpx.AsyncClient | None = None,
+        retry_policy: RetryPolicy | None = None,
+        circuit_breaker: CircuitBreaker | None = None,
+        rate_limiter: RateLimiter | None = None,
     ):
         self.token = token or settings.github.token
         self.base_url = settings.github.api_url
         self.timeout = settings.github.request_timeout_seconds
         self._client = client
         self._owns_client = client is None
+
+        # Pluggable resilience dependencies
+        self.retry_policy = retry_policy or RetryPolicy(max_retries=settings.github.max_retries)
+        self.circuit_breaker = circuit_breaker or CircuitBreaker(name="github_api")
+        self.rate_limiter = rate_limiter or RateLimiter()
 
     @property
     def client(self) -> httpx.AsyncClient:
@@ -71,7 +91,10 @@ class GitHubAPIClient:
         await self.aclose()
 
     def _get_headers(
-        self, request_id: str | None = None, etag: str | None = None
+        self,
+        request_id: str | None = None,
+        etag: str | None = None,
+        last_modified: str | None = None,
     ) -> dict[str, str]:
         headers = {
             "Accept": "application/vnd.github.v3+json",
@@ -84,7 +107,87 @@ class GitHubAPIClient:
             headers["X-Request-ID"] = request_id
         if etag:
             headers["If-None-Match"] = etag
+        if last_modified:
+            headers["If-Modified-Since"] = last_modified
         return headers
+
+    async def _execute_single_request(
+        self,
+        url: str,
+        headers: dict[str, str],
+        params: dict[str, Any] | None,
+        endpoint: str,
+        request_id: str | None,
+        etag: str | None,
+    ) -> GitHubResponse:
+        http_client = self.client
+        start_time = time.perf_counter()
+
+        try:
+            response = await http_client.get(url, headers=headers, params=params)
+        except httpx.RequestError as exc:
+            raise NetworkError(f"HTTP request to GitHub API failed: {exc}") from exc
+
+        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        res_headers = dict(response.headers)
+
+        # Update rate limiter state from response headers
+        remaining, reset_time, retry_after = self.rate_limiter.update_from_headers(res_headers)
+
+        parts = endpoint.strip("/").split("/")
+        owner = parts[1] if len(parts) >= 2 and parts[0] == "repos" else (parts[0] if parts else "unknown")
+        repo = parts[2] if len(parts) >= 3 and parts[0] == "repos" else (parts[1] if len(parts) >= 2 else "unknown")
+
+        logger.info(
+            "GitHub API request execution",
+            extra={
+                "owner": owner,
+                "repo": repo,
+                "status": response.status_code,
+                "latency_ms": latency_ms,
+                "remaining_rate_limit": remaining,
+                "request_id": request_id,
+                "endpoint": endpoint,
+            },
+        )
+
+        # Handle 304 Not Modified
+        if response.status_code == 304:
+            return GitHubResponse(
+                data={},
+                headers=res_headers,
+                status_code=304,
+                etag=etag or res_headers.get("ETag") or res_headers.get("etag"),
+                last_modified=res_headers.get("Last-Modified") or res_headers.get("last-modified"),
+                rate_limit_remaining=remaining,
+                api_version=res_headers.get("X-GitHub-Api-Version"),
+            )
+
+        # Handle rate limits (403 / 429)
+        if response.status_code in (403, 429):
+            if retry_after is not None or (remaining == 0 and reset_time is not None):
+                await self.rate_limiter.wait_if_needed(retry_after=retry_after)
+
+        # Domain error mappings
+        if response.status_code == 404:
+            raise RepositoryNotFound(f"Target GitHub resource not found: {endpoint}")
+        if response.status_code == 401:
+            raise Unauthorized("Unauthorized GitHub API request. Check GITHUB_TOKEN.")
+        if response.status_code == 403 and remaining == 0:
+            raise RateLimitExceeded(f"GitHub API rate limit exhausted for endpoint: {endpoint}")
+
+        if response.status_code >= 400:
+            response.raise_for_status()
+
+        return GitHubResponse(
+            data=response.json(),
+            headers=res_headers,
+            status_code=response.status_code,
+            etag=res_headers.get("ETag") or res_headers.get("etag"),
+            last_modified=res_headers.get("Last-Modified") or res_headers.get("last-modified"),
+            rate_limit_remaining=remaining,
+            api_version=res_headers.get("X-GitHub-Api-Version"),
+        )
 
     async def get(
         self,
@@ -92,136 +195,58 @@ class GitHubAPIClient:
         params: dict[str, Any] | None = None,
         request_id: str | None = None,
         etag: str | None = None,
+        last_modified: str | None = None,
     ) -> GitHubResponse:
-        """Fetch REST API resource with connection pooling, retries, jitter, ETag 304, and rate-limit wait."""
+        """Fetch REST API resource protected by CircuitBreaker, RetryPolicy, and RateLimiter."""
         url = f"{self.base_url.rstrip('/')}/{endpoint.lstrip('/')}"
-        headers = self._get_headers(request_id=request_id, etag=etag)
-        http_client = self.client
+        headers = self._get_headers(request_id=request_id, etag=etag, last_modified=last_modified)
 
-        # Parse owner/repo from endpoint if available for structured logging
-        parts = endpoint.strip("/").split("/")
-        owner = (
-            parts[1]
-            if len(parts) >= 2 and parts[0] == "repos"
-            else (parts[0] if parts else "unknown")
-        )
-        repo = (
-            parts[2]
-            if len(parts) >= 3 and parts[0] == "repos"
-            else (parts[1] if len(parts) >= 2 else "unknown")
-        )
+        attempt = 0
+        last_exc: Exception | None = None
 
-        max_retries = settings.github.max_retries
-
-        for attempt in range(1, max_retries + 1):
-            start_time = time.perf_counter()
+        while attempt < self.retry_policy.max_retries:
+            attempt += 1
             try:
-                response = await http_client.get(url, headers=headers, params=params)
-                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-
-                res_headers = dict(response.headers)
-                remaining, reset_time, retry_after = parse_rate_limit_headers(res_headers)
-
-                # Structured log for every request
-                logger.info(
-                    "GitHub API request execution",
-                    extra={
-                        "owner": owner,
-                        "repo": repo,
-                        "status": response.status_code,
-                        "latency_ms": latency_ms,
-                        "remaining_rate_limit": remaining,
-                        "request_id": request_id,
-                        "endpoint": endpoint,
-                    },
+                # Wrap request execution inside CircuitBreaker
+                response = await self.circuit_breaker.call(
+                    self._execute_single_request,
+                    url=url,
+                    headers=headers,
+                    params=params,
+                    endpoint=endpoint,
+                    request_id=request_id,
+                    etag=etag,
                 )
 
-                # Handle 304 Not Modified
-                if response.status_code == 304:
-                    return GitHubResponse(
-                        data={},
-                        headers=res_headers,
-                        status_code=304,
-                        etag=etag or res_headers.get("ETag") or res_headers.get("etag"),
-                        rate_limit_remaining=remaining,
-                        api_version=res_headers.get("X-GitHub-Api-Version"),
-                    )
-
-                # Handle 429 Rate Limit / Retry-After
-                if response.status_code in (403, 429):
-                    if retry_after is not None:
-                        logger.warning(
-                            "Rate limit exceeded; sleeping Retry-After interval",
-                            extra={
-                                "endpoint": endpoint,
-                                "sleep_seconds": retry_after,
-                                "request_id": request_id,
-                                "attempt": attempt,
-                            },
-                        )
-                        if attempt < max_retries:
-                            await asyncio.sleep(retry_after)
-                            continue
-
-                    if remaining == 0 and reset_time is not None:
-                        sleep_seconds = calculate_rate_limit_sleep(reset_time)
-                        logger.warning(
-                            "GitHub rate limit depleted; sleeping until reset",
-                            extra={
-                                "reset_time": reset_time,
-                                "sleep_seconds": sleep_seconds,
-                                "endpoint": endpoint,
-                                "request_id": request_id,
-                                "attempt": attempt,
-                            },
-                        )
-                        if attempt < max_retries:
-                            await asyncio.sleep(sleep_seconds)
-                            continue
-
-                # Retry on transient server errors (500, 502, 503, 504)
-                if is_retryable_status(response.status_code):
+                # Check if status warrants a retry via RetryPolicy
+                if self.retry_policy.should_retry(response.status_code, attempt):
+                    sleep_time = self.retry_policy.calculate_backoff(attempt)
                     logger.warning(
-                        "Transient HTTP error from GitHub API; backing off",
-                        extra={
-                            "status_code": response.status_code,
-                            "attempt": attempt,
-                            "endpoint": endpoint,
-                            "request_id": request_id,
-                        },
+                        "Transient status received from GitHub API; backing off",
+                        extra={"status_code": response.status_code, "attempt": attempt, "sleep_time": sleep_time},
                     )
-                    if attempt < max_retries:
-                        sleep_time = calculate_exponential_backoff(attempt)
-                        await asyncio.sleep(sleep_time)
-                        continue
+                    await asyncio.sleep(sleep_time)
+                    continue
 
-                response.raise_for_status()
+                return response
 
-                return GitHubResponse(
-                    data=response.json(),
-                    headers=res_headers,
-                    status_code=response.status_code,
-                    etag=res_headers.get("ETag") or res_headers.get("etag"),
-                    rate_limit_remaining=remaining,
-                    api_version=res_headers.get("X-GitHub-Api-Version"),
-                )
+            except (httpx.HTTPStatusError, NetworkError, GitHubError) as exc:
+                last_exc = exc
+                status_code = getattr(exc, "status_code", None)
+                if isinstance(exc, httpx.HTTPStatusError):
+                    status_code = exc.response.status_code
 
-            except (httpx.HTTPStatusError, httpx.RequestError) as exc:
-                latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-                logger.warning(
-                    "Request attempt failed",
-                    extra={
-                        "attempt": attempt,
-                        "max_retries": max_retries,
-                        "endpoint": endpoint,
-                        "request_id": request_id,
-                        "latency_ms": latency_ms,
-                        "error": str(exc),
-                    },
-                )
-                if attempt == max_retries:
-                    raise
-                sleep_time = calculate_exponential_backoff(attempt)
-                await asyncio.sleep(sleep_time)
+                if self.retry_policy.should_retry(status_code, attempt, exc=exc):
+                    sleep_time = self.retry_policy.calculate_backoff(attempt)
+                    logger.warning(
+                        "Request attempt failed; backing off",
+                        extra={"attempt": attempt, "error": str(exc), "sleep_time": sleep_time},
+                    )
+                    await asyncio.sleep(sleep_time)
+                    continue
 
-        raise RuntimeError(f"Failed to fetch endpoint after {max_retries} attempts: {endpoint}")
+                raise
+
+        if last_exc:
+            raise last_exc
+        raise NetworkError(f"Failed to fetch endpoint after {self.retry_policy.max_retries} attempts: {endpoint}")
