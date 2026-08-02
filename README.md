@@ -1,5 +1,11 @@
 # Repository Intelligence Platform (RIP) 🚀
 
+[![CI Status](https://img.shields.io/github/actions/workflow/status/sharmaahetal/The_Repository_Intelligence_Platform/ci.yml?branch=main&style=flat-square&logo=github)](https://github.com/sharmaahetal/The_Repository_Intelligence_Platform/actions)
+[![Code Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square)](docs/performance.md)
+[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue?style=flat-square&logo=python)](pyproject.toml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-orange?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/badge/release-v1.0.0-purple?style=flat-square)](CHANGELOG.md)
+
 > **Forecasts the future evolution of GitHub repositories by learning from historical point-in-time repository snapshots, producing probabilistic predictions for growth, maintainability, and abandonment while generating an explainable, natural language Repository Intelligence Report.**
 
 ---
