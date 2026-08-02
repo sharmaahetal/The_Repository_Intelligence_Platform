@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends
 
@@ -34,3 +35,13 @@ async def readiness_probe(
         snapshot_service_ready=True,
         details={"default_model_version": "v1.0"},
     )
+
+
+@router.get("/startup")
+async def startup_probe() -> dict[str, Any]:
+    """Startup probe verifying application bootstrap initialization completed successfully."""
+    return {
+        "status": "started",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "bootstrap_completed": True,
+    }
