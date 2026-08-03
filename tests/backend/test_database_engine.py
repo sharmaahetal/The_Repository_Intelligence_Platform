@@ -5,14 +5,17 @@ from backend.app.database.engine import (
     check_database_connection,
     create_engine,
     dispose_engine,
-    engine,
+    get_engine,
 )
 
 
 @pytest.mark.asyncio
-async def test_engine_singleton_instance():
-    """Verify shared engine singleton is an AsyncEngine instance."""
-    assert isinstance(engine, AsyncEngine)
+async def test_lazy_engine_initialization():
+    """Verify get_engine lazily initializes the AsyncEngine singleton."""
+    eng1 = get_engine()
+    eng2 = get_engine()
+    assert isinstance(eng1, AsyncEngine)
+    assert eng1 is eng2
 
 
 @pytest.mark.asyncio
@@ -32,5 +35,9 @@ async def test_check_database_connection_success():
 
 @pytest.mark.asyncio
 async def test_dispose_engine_cleanly():
-    """Verify dispose_engine runs without errors or unhandled warnings."""
+    """Verify dispose_engine runs without errors and clears singleton."""
+    await dispose_engine()
+    # Next get_engine call will recreate lazily
+    eng = get_engine()
+    assert isinstance(eng, AsyncEngine)
     await dispose_engine()

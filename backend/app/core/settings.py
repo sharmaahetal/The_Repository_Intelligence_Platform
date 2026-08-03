@@ -56,10 +56,23 @@ class DatabaseSettings(BaseModel):
         default=10,
         description="Maximum connection pool overflow limit.",
     )
+    pool_timeout: int = Field(
+        default=30,
+        description="Connection pool timeout in seconds before raising an error.",
+    )
+    pool_recycle: int = Field(
+        default=1800,
+        description="Connection pool recycle window in seconds.",
+    )
+    pool_use_lifo: bool = Field(
+        default=True,
+        description="Enable LIFO connection reuse strategy for improved pool efficiency.",
+    )
     echo: bool = Field(
         default=False,
         description="Enable SQL engine statement query logging.",
     )
+
 
 
 class GitHubSettings(BaseModel):
@@ -185,10 +198,17 @@ class Settings(BaseSettings):
                     db_d["pool_size"] = int(env["DATABASE_POOL_SIZE"])
                 if "DATABASE_MAX_OVERFLOW" in env:
                     db_d["max_overflow"] = int(env["DATABASE_MAX_OVERFLOW"])
+                if "DATABASE_POOL_TIMEOUT" in env:
+                    db_d["pool_timeout"] = int(env["DATABASE_POOL_TIMEOUT"])
+                if "DATABASE_POOL_RECYCLE" in env:
+                    db_d["pool_recycle"] = int(env["DATABASE_POOL_RECYCLE"])
+                if "DATABASE_POOL_USE_LIFO" in env:
+                    db_d["pool_use_lifo"] = str(env["DATABASE_POOL_USE_LIFO"]).lower() in ("true", "1", "t", "yes")
                 if "DATABASE_ECHO" in env:
                     db_d["echo"] = str(env["DATABASE_ECHO"]).lower() in ("true", "1", "t", "yes")
                 if db_d:
                     d["database"] = db_d
+
 
                 # Redis
                 redis_d: dict[str, Any] = {}
