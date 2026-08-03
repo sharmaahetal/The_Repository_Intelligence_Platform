@@ -1,63 +1,71 @@
-# System Architecture: Repository Intelligence Platform (RIP)
+# System Architecture Specification 🏛️
 
-## Overview
-The **Repository Intelligence Platform (RIP)** is a forecasting-native platform predicting open-source GitHub repository health, maintainability, growth, and abandonment.
+## 1. High-Level Architecture (20-Second Overview)
 
----
-
-## Service-Oriented Component Architecture
-
-```
-                     ┌───────────────────────────────────┐
-                     │    Browser Extension (React)      │
-                     │    - observer.ts (SPA Nav)        │
-                     │    - inject.ts (Shadow DOM)       │
-                     └─────────────────┬─────────────────┘
-                                       │ HTTP POST /api/v1/forecast
-                                       ▼
-                     ┌───────────────────────────────────┐
-                     │       FastAPI API Router          │
-                     │    - telemetry middleware          │
-                     └─────────────────┬─────────────────┘
-                                       │
-                ┌──────────────────────┼──────────────────────┐
-                ▼                      ▼                      ▼
-    ┌──────────────────────┐ ┌──────────────────┐ ┌──────────────────────┐
-    │  Collector Service   │ │ Snapshot Engine  │ │ Feature Store Engine │
-    │  (GitHub REST/GQL)   │ │ (snapshots/)     │ │ (features/registry)  │
-    └───────────┬──────────┘ └─────────┬────────┘ └───────────┬──────────┘
-                │                      │                      │
-                ▼                      ▼                      ▼
-    ┌──────────────────────┐ ┌──────────────────┐ ┌──────────────────────┐
-    │  Raw Payload Store   │ │ Normalizer Engine│ │ Dataset Service      │
-    │  (PostgreSQL JSONB)  │ │ (Relational DB)  │ │ (label_generator.py) │
-    └──────────────────────┘ └──────────────────┘ └───────────┬──────────┘
-                                                              │
-                                                              ▼
-                                                   ┌──────────────────────┐
-                                                   │ Model Registry       │
-                                                   │ (ml/registry/)       │
-                                                   └──────────────────────┘
+```mermaid
+graph TD
+    GitHub["GitHub API"] -->|Raw Payload| Snapshot["Snapshot Engine S(t_k)"]
+    Snapshot -->|RepositorySnapshot| Features["Feature Pipeline"]
+    Features -->|RepositoryFeatures| ML["ML Model / Inference"]
+    ML -->|ForecastDetails| FastAPI["FastAPI Backend"]
+    FastAPI -->|ForecastResponse| Extension["Browser Extension"]
 ```
 
 ---
 
-## Key Subsystems
+## 2. End-to-End Sequence Diagram
 
-### 1. Data Layer & Raw Store
-- API responses are saved unmodified into `raw_payload_store` table using PostgreSQL JSONB.
-- Shields downstream normalizers and feature pipelines from GitHub API schema changes.
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Extension as Browser Extension
+    participant API as FastAPI Backend
+    participant Builder as Snapshot Builder
+    participant Registry as Feature Registry
+    participant ML as Inference Engine
+    participant Synthesizer as Narrative Synthesizer
 
-### 2. Snapshot Engine (`backend/app/snapshots/`)
-- Groups event payloads into historical snapshot states $S(t_k)$ at specified timestamps.
-- Enables backtesting and dataset generation across historical temporal windows.
+    Extension->>API: GET /api/v1/forecast/{owner}/{repo}?horizon=180
+    API->>Builder: build_snapshot(owner, repo, t_k)
+    Builder-->>API: RepositorySnapshot S(t_k)
+    API->>Registry: extract_features(snapshot)
+    Registry-->>API: FeatureVector (24 features)
+    API->>ML: predict(FeatureVector, horizon=180)
+    ML-->>API: ForecastDetails + SHAP Attributions
+    API->>Synthesizer: synthesize_report(predictions, shap_values)
+    Synthesizer-->>API: Natural Language Report
+    API-->>Extension: ForecastResponseDTO
+```
 
-### 3. Feature Store Engine (`backend/app/features/`)
-- Pluggable feature builders registered in `registry.py`.
-- Computes velocity, acceleration, and trend features strictly bounded by snapshot timestamp $t_k$.
+---
 
-### 4. Label Generator (`datasets/label_generator.py`)
-- Evaluates forward observation window $[t_k, t_k + H]$ to assign ground-truth labels for Growth, Abandonment, and Contributor Retention.
+## 3. Failure Mode & Recovery Matrix
 
-### 5. Repository Narrative Engine (`backend/app/narrative/`)
-- Synthesizes model predictions and SHAP feature drivers into natural language report sentences.
+| Component | Failure Scenario | System Handling / Degradation | Recovery Procedure |
+|---|---|---|---|
+| **GitHub API** | 503 / Rate Limit / Timeout | CircuitBreaker opens, fast-failing; fallback to cached snapshot | Automatic retry with exponential backoff & jitter |
+| **Redis Cache** | Connection Refused | Transparent fallback to snapshot builder & direct DB evaluation | Automatic reconnection on next operation |
+| **PostgreSQL DB** | OperationalError / Disconnect | Readiness probe returns `"degraded"`, API raises HTTP 503 | Auto-restart via Docker / Connection pool reconnect |
+| **Model Registry** | Model Artifact Missing | Fallbacks to default baseline heuristic predictor | Model reload via `/health/ready` initialization |
+
+---
+
+## 4. Architectural Decision Records (ADR Timeline)
+
+```mermaid
+timeline
+    title System Architecture Evolution
+    ADR-0001 : Parquet Dataset Format (Zero-copy PyArrow & Columnar Compression)
+    ADR-0002 : XGBoost Model Selection (Native SHAP TreeExplainer Integration)
+    ADR-0003 : Feature Schema Lock (Integer Versioning & Anti-Dimension Mismatch)
+    ADR-0004 : Pydantic Snapshot Immutability (Temporal Anti-Leakage Guard)
+    ADR-0005 : Modularized Settings Root (Centralized Dependency Injection)
+```
+
+| ADR | Title | Status | Impact |
+| :--- | :--- | :---: | :--- |
+| **[ADR-0001](adr/0001-parquet-dataset-format.md)** | Parquet Dataset Storage Format | **Accepted** | Columnar compression & zero-copy PyArrow integration. |
+| **[ADR-0002](adr/0002-xgboost-over-lightgbm.md)** | XGBoost Model Selection | **Accepted** | Native SHAP tree explainer integration. |
+| **[ADR-0003](adr/0003-feature-schema-versioning.md)** | Feature Schema Versioning | **Accepted** | Integer schema lock preventing vector mismatch. |
+| **[ADR-0004](adr/0004-pydantic-domain-models.md)** | Pydantic Snapshot Immutability | **Accepted** | Strict temporal anti-leakage guards. |
+| **ADR-0005** | Modularized Settings Root | **Accepted** | Single root configuration & provider DI. |
