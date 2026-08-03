@@ -7,8 +7,10 @@ from backend.app.database.engine import (
 )
 from backend.app.database.session import (
     AsyncSessionLocal,
+    SessionFactory,
+    create_sessionmaker,
     get_db_session,
-    get_sessionmaker,
+    get_session_factory,
 )
 
 __all__ = [
@@ -17,7 +19,9 @@ __all__ = [
     "create_engine",
     "dispose_engine",
     "check_database_connection",
+    "SessionFactory",
     "AsyncSessionLocal",
-    "get_sessionmaker",
+    "create_sessionmaker",
+    "get_session_factory",
     "get_db_session",
 ]
