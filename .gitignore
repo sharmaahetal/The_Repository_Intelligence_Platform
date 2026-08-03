@@ -69,7 +69,10 @@ __MACOSX/
 .idea/
 *.swp
 
-# ML Models & Datasets
+# Databases
+*.db
+data.db
+
 ml/models/*.json
 ml/models/*.pkl
 *.h5

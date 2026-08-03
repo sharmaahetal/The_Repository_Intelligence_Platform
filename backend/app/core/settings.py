@@ -111,8 +111,8 @@ class ModelSettings(BaseModel):
 
 
 # Helper function to read environment map
-def _load_env_map() -> dict[str, str]:
-    env_map = dict(os.environ)
+def _load_env_map() -> dict[str, Any]:
+    env_map: dict[str, Any] = dict(os.environ)
     if os.path.exists(".env"):
         try:
             with open(".env", "r", encoding="utf-8") as f:
@@ -157,15 +157,15 @@ class Settings(BaseSettings):
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         class NestedFlatEnvSource(PydanticBaseSettingsSource):
-            def get_field_value(self, field, field_name):
-                return None
+            def get_field_value(self, field: Any, field_name: str) -> tuple[Any, str, bool]:
+                return None, "", False
 
             def __call__(self) -> dict[str, Any]:
                 env = _load_env_map()
                 d: dict[str, Any] = {}
 
                 # App
-                app_d = {}
+                app_d: dict[str, Any] = {}
                 if "APP_NAME" in env:
                     app_d["app_name"] = env["APP_NAME"]
                 if "APP_VERSION" in env or "VERSION" in env:
@@ -173,12 +173,12 @@ class Settings(BaseSettings):
                 if "ENVIRONMENT" in env or "APP_ENV" in env or "APP_ENVIRONMENT" in env:
                     app_d["environment"] = env.get("APP_ENVIRONMENT") or env.get("ENVIRONMENT") or env.get("APP_ENV")
                 if "DEBUG" in env:
-                    app_d["debug"] = env["DEBUG"].lower() in ("true", "1", "t", "yes")
+                    app_d["debug"] = str(env["DEBUG"]).lower() in ("true", "1", "t", "yes")
                 if app_d:
                     d["app"] = app_d
 
                 # Database
-                db_d = {}
+                db_d: dict[str, Any] = {}
                 if "DATABASE_URL" in env:
                     db_d["url"] = env["DATABASE_URL"]
                 if "DATABASE_POOL_SIZE" in env:
@@ -186,12 +186,12 @@ class Settings(BaseSettings):
                 if "DATABASE_MAX_OVERFLOW" in env:
                     db_d["max_overflow"] = int(env["DATABASE_MAX_OVERFLOW"])
                 if "DATABASE_ECHO" in env:
-                    db_d["echo"] = env["DATABASE_ECHO"].lower() in ("true", "1", "t", "yes")
+                    db_d["echo"] = str(env["DATABASE_ECHO"]).lower() in ("true", "1", "t", "yes")
                 if db_d:
                     d["database"] = db_d
 
                 # Redis
-                redis_d = {}
+                redis_d: dict[str, Any] = {}
                 if "REDIS_URL" in env:
                     redis_d["url"] = env["REDIS_URL"]
                 if "REDIS_CACHE_TTL" in env:
@@ -200,7 +200,7 @@ class Settings(BaseSettings):
                     d["redis"] = redis_d
 
                 # GitHub
-                gh_d = {}
+                gh_d: dict[str, Any] = {}
                 if "GITHUB_TOKEN" in env and env["GITHUB_TOKEN"]:
                     gh_d["token"] = env["GITHUB_TOKEN"]
                 if "GITHUB_API_VERSION" in env:
@@ -209,14 +209,14 @@ class Settings(BaseSettings):
                     d["github"] = gh_d
 
                 # Logging
-                log_d = {}
+                log_d: dict[str, Any] = {}
                 if "LOG_LEVEL" in env:
                     log_d["log_level"] = env["LOG_LEVEL"]
                 if log_d:
                     d["logging"] = log_d
 
                 # Model
-                model_d = {}
+                model_d: dict[str, Any] = {}
                 if "MODEL_REGISTRY_PATH" in env or "MODEL_PATH" in env:
                     model_d["model_registry_path"] = env.get("MODEL_REGISTRY_PATH") or env.get("MODEL_PATH")
                 if "DEFAULT_MODEL_VERSION" in env:
@@ -225,6 +225,7 @@ class Settings(BaseSettings):
                     d["model"] = model_d
 
                 return d
+
 
         return (init_settings, NestedFlatEnvSource(settings_cls), env_settings, dotenv_settings)
 
