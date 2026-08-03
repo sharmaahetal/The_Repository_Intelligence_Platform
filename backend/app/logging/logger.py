@@ -36,13 +36,14 @@ def setup_logger(name: str = "rip_backend") -> logging.Logger:
 
     if not logger.handlers:
         handler = logging.StreamHandler(sys.stdout)
-        
+
         env_val = os.getenv("ENVIRONMENT", "development").lower()
         is_prod = (
             env_val in ("production", "prod")
             or os.getenv("LOG_FORMAT", "").lower() == "json"
         )
 
+        formatter: logging.Formatter
         if is_prod:
             formatter = JSONFormatter(
                 service_name="rip_backend",

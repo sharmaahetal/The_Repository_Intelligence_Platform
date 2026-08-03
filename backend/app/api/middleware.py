@@ -5,7 +5,7 @@ from collections.abc import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from backend.app.logging import bind_contextvars, logger
+from backend.app.logging import bind_contextvars
 
 
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):

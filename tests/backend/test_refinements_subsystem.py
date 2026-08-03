@@ -2,12 +2,8 @@ import pytest
 
 from backend.app.config import AppConfig, Environment, MissingSecretError, SecretsManager, settings
 from backend.app.config.providers import EnvProvider, VaultProvider
-from backend.app.events.bus import EventBus
-from backend.app.events.types import SnapshotCreatedEvent
 from backend.app.ml.canary import CanaryDeploymentManager
 from backend.app.models.lineage import DataLineage
-from backend.app.scheduler.runner import PlatformScheduler
-from backend.app.storage.provider import LocalStorageProvider, S3StorageProvider
 from backend.app.tasks.queue import TaskQueue
 
 

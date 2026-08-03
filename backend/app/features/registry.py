@@ -1,6 +1,6 @@
-from backend.app.features.dag import FeatureDAG
 from backend.app.features.base import BaseFeatureBuilder
-from backend.app.features.manifest import FeatureDefinition, FeatureManifest
+from backend.app.features.dag import FeatureDAG
+from backend.app.features.manifest import FeatureManifest
 from backend.app.logging import logger
 
 

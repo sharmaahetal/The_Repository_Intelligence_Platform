@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
+
 import pytest
 
-from backend.app.api.exceptions import ErrorBody, ErrorResponse
+from backend.app.api.exceptions import ErrorResponse
 from backend.app.api.models import ForecastDetails, ForecastResponse
 from backend.app.models.context import PredictionContext
 from backend.app.models.snapshot import RepositorySnapshot

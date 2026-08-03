@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Any
 
-_REQUEST_CONTEXT: ContextVar[dict[str, Any]] = ContextVar("request_context", default={})
+_REQUEST_CONTEXT: ContextVar[dict[str, Any] | None] = ContextVar("request_context", default=None)
 
 
 def set_request_context(request_id: str, **kwargs: Any) -> dict[str, Any]:
@@ -14,7 +14,8 @@ def set_request_context(request_id: str, **kwargs: Any) -> dict[str, Any]:
 
 def get_request_context() -> dict[str, Any]:
     """Returns a copy of current request-scoped context dictionary."""
-    return dict(_REQUEST_CONTEXT.get({}))
+    val = _REQUEST_CONTEXT.get()
+    return dict(val) if val is not None else {}
 
 
 def clear_request_context() -> None:

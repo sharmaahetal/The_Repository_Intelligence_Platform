@@ -1,10 +1,11 @@
-from enum import Enum
+from enum import StrEnum
+
 from pydantic import Field, model_validator
 
 from backend.app.config.base import BaseAppSettings
 
 
-class Environment(str, Enum):
+class Environment(StrEnum):
     DEVELOPMENT = "development"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -20,10 +21,9 @@ class AppConfig(BaseAppSettings):
 
     @model_validator(mode="after")
     def validate_production_cors(self) -> "AppConfig":
-        if self.environment == Environment.PRODUCTION:
-            if "*" in self.cors_origins:
-                raise ValueError(
-                    "Wildcard CORS origins ['*'] are strictly forbidden in production environment. "
-                    "Explicit origins must be specified."
-                )
+        if self.environment == Environment.PRODUCTION and "*" in self.cors_origins:
+            raise ValueError(
+                "Wildcard CORS origins ['*'] are strictly forbidden in production environment. "
+                "Explicit origins must be specified."
+            )
         return self

@@ -1,12 +1,11 @@
 import os
 import tempfile
+
 import pytest
 
 from backend.app.ml.experiments import ExperimentRegistry, ExperimentRun
-from backend.app.ml.manifest import TrainingManifest
 from backend.app.ml.reports import EvaluationReportGenerator
 from backend.app.ml.schema_lock import FeatureSchemaLock, FeatureSchemaMismatchError
-from backend.app.ml.tuner import HyperparameterTuner
 from datasets.export import DatasetExporter, DatasetManifest
 
 
@@ -58,7 +57,7 @@ def test_dataset_exporter_sha256_content_hashing():
         assert os.path.exists(parquet_path)
         assert os.path.exists(manifest_path)
 
-        with open(manifest_path, "r", encoding="utf-8") as f:
+        with open(manifest_path, encoding="utf-8") as f:
             manifest_json = f.read()
 
         manifest = DatasetManifest.model_validate_json(manifest_json)
@@ -99,7 +98,7 @@ def test_evaluation_report_generator():
         assert os.path.exists(artifacts["metrics_json"])
         assert os.path.exists(artifacts["feature_importance_json"])
 
-        with open(artifacts["report_html"], "r", encoding="utf-8") as f:
+        with open(artifacts["report_html"], encoding="utf-8") as f:
             html = f.read()
 
         assert "ML Model Evaluation Report: rip-growth" in html

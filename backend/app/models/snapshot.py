@@ -53,9 +53,13 @@ class RepositorySnapshot(BaseModel):
 
     @model_validator(mode="after")
     def validate_domain_invariants(self) -> "RepositorySnapshot":
-        if self.updated_at and self.metadata and self.metadata.snapshot_time:
-            if self.updated_at > self.metadata.snapshot_time:
-                raise ValueError("Domain invariant violation: updated_at cannot be after snapshot_time")
+        if (
+            self.updated_at
+            and self.metadata
+            and self.metadata.snapshot_time
+            and self.updated_at > self.metadata.snapshot_time
+        ):
+            raise ValueError("Domain invariant violation: updated_at cannot be after snapshot_time")
         return self
 
     @model_validator(mode="before")
@@ -87,9 +91,10 @@ class RepositorySnapshot(BaseModel):
                     with suppress(ValueError):
                         t_snap = datetime.fromisoformat(t_snap.replace("Z", "+00:00"))
 
+                t_snap_dt = t_snap if isinstance(t_snap, datetime) else datetime.now(UTC)
                 repo_id = int(data.get("repository_id") or data.get("id") or 0)
                 schema_ver = int(data.get("schema_version") or 1)
-                snap_id = data.get("snapshot_id") or compute_snapshot_id(repo_id, t_snap, schema_ver)
+                snap_id = data.get("snapshot_id") or compute_snapshot_id(repo_id, t_snap_dt, schema_ver)
 
                 data["metadata"] = {
                     "snapshot_id": snap_id,

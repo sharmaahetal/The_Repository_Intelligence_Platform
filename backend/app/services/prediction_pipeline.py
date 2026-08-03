@@ -1,6 +1,5 @@
 import hashlib
 import time
-from typing import Any
 
 from backend.app.api.models import ForecastResponse
 from backend.app.features.pipeline import FeaturePipeline

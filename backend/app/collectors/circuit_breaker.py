@@ -9,7 +9,7 @@ from backend.app.logging import logger
 T = TypeVar("T")
 
 
-class CircuitState(str, enum.Enum):
+class CircuitState(enum.StrEnum):
     CLOSED = "CLOSED"
     OPEN = "OPEN"
     HALF_OPEN = "HALF_OPEN"

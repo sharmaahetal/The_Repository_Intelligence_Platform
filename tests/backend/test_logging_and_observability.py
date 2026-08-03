@@ -1,7 +1,8 @@
 import json
 import logging
+
 import pytest
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from backend.app.api.exceptions import PredictionError, register_exception_handlers
@@ -12,7 +13,6 @@ from backend.app.logging import (
     get_request_context,
     log_duration,
     log_execution_time,
-    logger,
     redact_sensitive_data,
     set_request_context,
 )

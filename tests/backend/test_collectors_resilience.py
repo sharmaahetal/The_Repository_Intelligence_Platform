@@ -10,13 +10,10 @@ from backend.app.collectors import (
     CircuitState,
     GitHubAPIClient,
     GitHubResponse,
-    NetworkError,
-    RateLimitExceeded,
     RateLimiter,
     RepositoryNotFound,
     RetryPolicy,
     Unauthorized,
-    ValidationError,
 )
 
 
@@ -67,11 +64,13 @@ async def test_rate_limiter_unit_behavior():
     assert limiter.remaining == 0
     assert limiter.reset_timestamp == 1700000000
 
-    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-        with patch("time.time", return_value=1699999990):
-            slept = await limiter.wait_if_needed()
-            assert slept == 11.0
-            mock_sleep.assert_called_once_with(11.0)
+    with (
+        patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        patch("time.time", return_value=1699999990),
+    ):
+        slept = await limiter.wait_if_needed()
+        assert slept == 11.0
+        mock_sleep.assert_called_once_with(11.0)
 
 
 @pytest.mark.asyncio

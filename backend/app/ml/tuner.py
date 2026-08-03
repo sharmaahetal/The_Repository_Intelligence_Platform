@@ -45,8 +45,8 @@ class HyperparameterTuner:
             "n_estimators": [50, 100],
         }
 
-        keys, values = zip(*grid.items())
-        combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
+        keys, values = zip(*grid.items(), strict=True)
+        combinations = [dict(zip(keys, v, strict=True)) for v in itertools.product(*values)]
 
         trials = []
         best_score = -float("inf")

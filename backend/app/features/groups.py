@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class FeatureGroup(str, Enum):
+class FeatureGroup(StrEnum):
     """Explicit domain feature grouping categories."""
 
     ACTIVITY = "activity"

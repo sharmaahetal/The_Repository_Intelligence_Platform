@@ -1,13 +1,15 @@
 import asyncio
 import time
 import uuid
-from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from typing import Any
+
+import numpy as np
 
 from backend.app.api.models import ForecastDetails, ForecastResponse, TopFactor
 from backend.app.features.pipeline import FeaturePipeline
 from backend.app.logging import logger
+from backend.app.ml.dataset_loader import InMemoryDataset
 from backend.app.ml.explainability.shap_service import ExplainabilityService
 from backend.app.models.context import PredictionContext
 from backend.app.models.feature import RepositoryFeatures
@@ -99,10 +101,18 @@ class ExplainabilityStage:
         shap_summary = {}
         with_importances = getattr(prediction, "raw_model", None)
         if with_importances is not None:
+            feat_vec = repo_features.as_vector()
+            ds = InMemoryDataset(
+                X=np.array([list(feat_vec.values())]),
+                y=np.array([1]),
+                feature_names=list(feat_vec.keys()),
+                snapshot_times=[datetime.now(UTC)],
+                full_names=[f"{context.owner}/{context.repo}"],
+            )
             shap_summary = await asyncio.to_thread(
                 self.explainability.compute_feature_importances,
                 prediction.raw_model,
-                repo_features,
+                ds,
             )
 
         narrative = self.narrative_synthesizer.synthesize(

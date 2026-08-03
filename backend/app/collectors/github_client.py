@@ -164,9 +164,10 @@ class GitHubAPIClient:
             )
 
         # Handle rate limits (403 / 429)
-        if response.status_code in (403, 429):
-            if retry_after is not None or (remaining == 0 and reset_time is not None):
-                await self.rate_limiter.wait_if_needed(retry_after=retry_after)
+        if response.status_code in (403, 429) and (
+            retry_after is not None or (remaining == 0 and reset_time is not None)
+        ):
+            await self.rate_limiter.wait_if_needed(retry_after=retry_after)
 
         # Domain error mappings
         if response.status_code == 404:

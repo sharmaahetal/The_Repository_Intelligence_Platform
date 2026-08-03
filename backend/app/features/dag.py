@@ -25,7 +25,7 @@ class FeatureDAG:
         Returns list of feature names in executable dependency order.
         Raises FeatureCycleError if a circular dependency is detected.
         """
-        in_degree: dict[str, int] = {name: 0 for name in self.definitions}
+        in_degree: dict[str, int] = dict.fromkeys(self.definitions, 0)
         graph: dict[str, list[str]] = defaultdict(list)
 
         # Build adjacency graph
