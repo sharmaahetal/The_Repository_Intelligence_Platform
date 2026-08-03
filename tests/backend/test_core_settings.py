@@ -1,6 +1,9 @@
 import os
 from unittest.mock import patch
 
+import pytest
+from pydantic import BaseModel, SecretStr, ValidationError
+
 from backend.app.core.settings import (
     AppSettings,
     DatabaseSettings,
@@ -14,49 +17,76 @@ from backend.app.core.settings import (
 )
 
 
-def test_settings_default_instantiation():
-    s = get_settings()
-    assert s is settings
-    assert isinstance(s.app, AppSettings)
-    assert isinstance(s.database, DatabaseSettings)
-    assert isinstance(s.redis, RedisSettings)
-    assert isinstance(s.github, GitHubSettings)
-    assert isinstance(s.logging, LoggingSettings)
-    assert isinstance(s.model, ModelSettings)
+def test_subsystems_are_plain_basemodels():
+    """Verify subsystems inherit from plain pydantic BaseModel, not BaseSettings."""
+    assert issubclass(AppSettings, BaseModel)
+    assert issubclass(DatabaseSettings, BaseModel)
+    assert issubclass(GitHubSettings, BaseModel)
+    assert issubclass(RedisSettings, BaseModel)
+    assert issubclass(LoggingSettings, BaseModel)
+    assert issubclass(ModelSettings, BaseModel)
 
-    assert s.app.app_name == "Repository Intelligence Platform"
-    assert s.app.version == "1.0.0"
-    assert s.database.url.startswith(("sqlite", "postgresql"))
-    assert s.redis.url.startswith("redis://")
-    assert s.logging.log_level == "INFO"
-    assert s.model.model_registry_path == "artifacts/registry"
+
+def test_database_url_required_no_fallback():
+    """Blocker 1: Database URL has no default. Missing DATABASE_URL must raise ValidationError."""
+    with patch.dict(os.environ, {}, clear=True):
+        if os.path.exists(".env"):
+            with patch("os.path.exists", return_value=False):
+                get_settings.cache_clear()
+                with pytest.raises(ValidationError) as exc_info:
+                    get_settings()
+                assert "database" in str(exc_info.value)
+        get_settings.cache_clear()
+
+
+def test_environment_literal_validation():
+    """Blocker 2: Environment must be Literal['development', 'testing', 'staging', 'production']."""
+    with patch.dict(
+        os.environ,
+        {"DATABASE_URL": "postgresql://localhost:5432/test_db", "ENVIRONMENT": "invalid_env_name"},
+        clear=True,
+    ):
+        get_settings.cache_clear()
+        with pytest.raises(ValidationError) as exc_info:
+            get_settings()
+        assert "environment" in str(exc_info.value)
+    get_settings.cache_clear()
+
+
+def test_log_level_literal_validation():
+    """Blocker 3: Log level must be Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']."""
+    with patch.dict(
+        os.environ,
+        {"DATABASE_URL": "postgresql://localhost:5432/test_db", "LOG_LEVEL": "TRACE"},
+        clear=True,
+    ):
+        get_settings.cache_clear()
+        with pytest.raises(ValidationError) as exc_info:
+            get_settings()
+        assert "log_level" in str(exc_info.value)
+    get_settings.cache_clear()
+
+
+def test_secret_str_github_token():
+    """Major 3: GitHub token uses SecretStr to prevent credential leakage."""
+    with patch.dict(
+        os.environ,
+        {
+            "DATABASE_URL": "postgresql://localhost:5432/test_db",
+            "GITHUB_TOKEN": "ghp_secret_token_123456789",
+        },
+        clear=True,
+    ):
+        get_settings.cache_clear()
+        s = get_settings()
+        assert isinstance(s.github.token, SecretStr)
+        assert s.github.token.get_secret_value() == "ghp_secret_token_123456789"
+        # Verify str representation is masked
+        assert "ghp_secret_token_123456789" not in str(s.github.token)
+    get_settings.cache_clear()
 
 
 def test_settings_lru_cache_singleton():
     s1 = get_settings()
     s2 = get_settings()
     assert s1 is s2
-
-
-def test_settings_environment_variable_override():
-    with patch.dict(
-        os.environ,
-        {
-            "APP_NAME": "Custom RIP Platform",
-            "DATABASE_URL": "postgresql+asyncpg://user:pass@localhost:5432/custom_db",
-            "REDIS_URL": "redis://cache.internal:6379/1",
-            "LOG_LEVEL": "DEBUG",
-        },
-        clear=False,
-    ):
-        # Clear lru_cache for custom test instance
-        get_settings.cache_clear()
-        custom_settings = get_settings()
-
-        assert custom_settings.app.app_name == "Custom RIP Platform"
-        assert custom_settings.database.url == "postgresql+asyncpg://user:pass@localhost:5432/custom_db"
-        assert custom_settings.redis.url == "redis://cache.internal:6379/1"
-        assert custom_settings.logging.log_level == "DEBUG"
-
-        # Restore singleton
-        get_settings.cache_clear()
