@@ -1,4 +1,4 @@
-"""Services package for Repository Intelligence Platform."""
+"""Public API exports for Repository Intelligence Platform service layer."""
 
 from backend.app.services.exceptions import (
     DuplicatePredictionError,
@@ -35,31 +35,38 @@ from backend.app.services.snapshot_service import (
 )
 
 __all__ = [
+    # Services
+    "RepositoryService",
+    "SnapshotService",
+    "RepositorySnapshotService",
+    "PredictionService",
+    "PredictionExplanationService",
+    "ModelVersionService",
+    "ModelService",
+    # Base Exception
     "ServiceError",
     "ServiceException",
+    # Repository Exceptions
     "RepositoryAlreadyExists",
     "RepositoryAlreadyExistsError",
     "RepositoryNotFound",
     "RepositoryNotFoundError",
+    # Snapshot Exceptions
     "SnapshotNotFound",
     "SnapshotNotFoundError",
     "DuplicateSnapshotError",
+    # Prediction Exceptions
     "PredictionNotFound",
     "PredictionNotFoundError",
     "DuplicatePredictionError",
     "InvalidPredictionRequest",
+    # Model Exceptions
     "ModelVersionNotFound",
     "ModelNotFound",
     "ModelNotFoundError",
     "ModelVersionAlreadyExists",
     "InvalidModelVersion",
+    # Explanation Exceptions
     "PredictionExplanationNotFound",
     "PredictionExplanationAlreadyExists",
-    "RepositoryService",
-    "SnapshotService",
-    "RepositorySnapshotService",
-    "PredictionService",
-    "ModelService",
-    "ModelVersionService",
-    "PredictionExplanationService",
 ]
