@@ -153,6 +153,9 @@ async def test_entity_repositories_custom_methods(tmp_path):
         assert len(await pred_dao.high_confidence_predictions(minimum_confidence=0.90)) == 1
         assert len(await pred_dao.high_confidence_predictions(minimum_confidence=0.95)) == 0
 
+        with pytest.raises(ValueError, match="minimum_confidence must be between 0.0 and 1.0"):
+            await pred_dao.high_confidence_predictions(minimum_confidence=1.5)
+
         # 5. Test PredictionExplanationRepository
         e1 = await expl_dao.create(
             prediction_id=p1.id,
