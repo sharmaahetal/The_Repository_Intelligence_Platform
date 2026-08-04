@@ -79,6 +79,10 @@ async def test_repository_service_lifecycle(test_session_factory):
     fetched = await repo_service.get_repository(repository_id=r1.id)
     assert fetched.full_name == "django/django"
 
+    # Fail fast when no lookup identifier is provided
+    with pytest.raises(ValueError, match="At least one lookup identifier"):
+        await repo_service.get_repository()
+
     # Non-existent repository raises RepositoryNotFound
     with pytest.raises(RepositoryNotFound, match="Repository '99999' was not found."):
         await repo_service.get_repository(repository_id=99999)
@@ -91,10 +95,18 @@ async def test_repository_service_lifecycle(test_session_factory):
     updated = await repo_service.update_repository(r1.id, default_branch="master")
     assert updated.default_branch == "master"
 
+    # Update non-existent raises RepositoryNotFound
+    with pytest.raises(RepositoryNotFound):
+        await repo_service.update_repository(99999, default_branch="main")
+
     # Delete
     assert await repo_service.delete_repository(r1.id) is True
     with pytest.raises(RepositoryNotFound):
         await repo_service.get_repository(repository_id=r1.id)
+
+    # Delete non-existent raises RepositoryNotFound
+    with pytest.raises(RepositoryNotFound):
+        await repo_service.delete_repository(99999)
 
 
 @pytest.mark.asyncio
