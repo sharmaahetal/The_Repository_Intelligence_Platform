@@ -121,6 +121,30 @@ async def test_unit_of_work_automatic_rollback_on_exception(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_unit_of_work_flush(tmp_path):
+    """Verify UnitOfWork.flush() populates auto-generated primary key IDs prior to transaction commit."""
+    db_file = tmp_path / "test_uow_flush.db"
+    test_engine = create_engine(f"sqlite+aiosqlite:///{db_file}")
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    session_maker = async_sessionmaker(bind=test_engine, class_=AsyncSession, expire_on_commit=False)
+
+    async with UnitOfWork(session_factory=session_maker) as uow:
+        repo = await uow.repositories.create(
+            github_repository_id=7001,
+            owner="rust-lang",
+            name="rust",
+            full_name="rust-lang/rust",
+        )
+        await uow.flush()
+        assert repo.id is not None
+
+    await test_engine.dispose()
+
+
+@pytest.mark.asyncio
 async def test_unit_of_work_unentered_property_access():
     """Verify accessing UnitOfWork properties prior to entering context raises RuntimeError."""
     uow = UnitOfWork()

@@ -110,6 +110,12 @@ class UnitOfWork:
             await self.session.rollback()
             logger.debug("Rolled back UnitOfWork transaction", extra={"component": "unit_of_work"})
 
+    async def flush(self) -> None:
+        """Flush pending changes to the database without committing the transaction."""
+        if self.session is not None:
+            await self.session.flush()
+            logger.debug("Flushed UnitOfWork session state", extra={"component": "unit_of_work"})
+
     async def close(self) -> None:
         """Close the active AsyncSession."""
         if self.session is not None:
