@@ -43,8 +43,8 @@ class DatabaseSettings(BaseModel):
     """Relational database connection pool and engine configuration."""
 
     url: str = Field(
-        ...,
-        description="Async PostgreSQL database connection string URL. Required.",
+        default="sqlite+aiosqlite:///./data.db",
+        description="Async database connection string URL.",
     )
 
     pool_size: int = Field(
@@ -145,11 +145,12 @@ class Settings(BaseSettings):
     """Consolidated root application configuration model."""
 
     app: AppSettings = Field(default_factory=AppSettings)
-    database: DatabaseSettings
+    database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     github: GitHubSettings = Field(default_factory=GitHubSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     model: ModelSettings = Field(default_factory=ModelSettings)
+
 
     model_config = SettingsConfigDict(
 

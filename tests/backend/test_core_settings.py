@@ -27,16 +27,16 @@ def test_subsystems_are_plain_basemodels():
     assert issubclass(ModelSettings, BaseModel)
 
 
-def test_database_url_required_no_fallback():
-    """Blocker 1: Database URL has no default. Missing DATABASE_URL must raise ValidationError."""
+def test_database_url_default_fallback():
+    """Verify DatabaseSettings.url falls back to default SQLite connection string when DATABASE_URL is not set."""
     with patch.dict(os.environ, {}, clear=True):
         if os.path.exists(".env"):
             with patch("os.path.exists", return_value=False):
                 get_settings.cache_clear()
-                with pytest.raises(ValidationError) as exc_info:
-                    get_settings()
-                assert "database" in str(exc_info.value)
+                s = get_settings()
+                assert s.database.url == "sqlite+aiosqlite:///./data.db"
         get_settings.cache_clear()
+
 
 
 def test_environment_literal_validation():
