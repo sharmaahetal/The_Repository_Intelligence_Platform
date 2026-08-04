@@ -11,9 +11,7 @@ from backend.app.core.settings import (
     LoggingSettings,
     ModelSettings,
     RedisSettings,
-    Settings,
     get_settings,
-    settings,
 )
 
 

@@ -5,7 +5,6 @@ from backend.app.database.session import (
     AsyncSessionLocal,
     SessionFactory,
     get_db_session,
-    get_session_factory,
 )
 
 
@@ -36,7 +35,7 @@ async def test_get_db_session_lifecycle_and_close():
 async def test_get_db_session_rollback_on_exception():
     """Test 2: Verify exceptions trigger transaction rollback and are re-raised without swallowing."""
     with pytest.raises(RuntimeError, match="Simulated transaction error"):
-        async for session in get_db_session():
+        async for _session in get_db_session():
             raise RuntimeError("Simulated transaction error")
 
 

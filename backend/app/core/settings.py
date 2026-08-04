@@ -4,8 +4,8 @@ Centralizes application, database, cache, GitHub, logging, and ML model settings
 into a unified, type-safe, validated, and cached configuration hierarchy.
 """
 
-from functools import lru_cache
 import os
+from functools import lru_cache
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, SecretStr
@@ -126,7 +126,7 @@ def _load_env_map() -> dict[str, Any]:
     env_map: dict[str, Any] = dict(os.environ)
     if os.path.exists(".env"):
         try:
-            with open(".env", "r", encoding="utf-8") as f:
+            with open(".env", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith("#") and "=" in line:

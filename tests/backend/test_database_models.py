@@ -2,12 +2,10 @@ from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import inspect
-
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import configure_mappers
 
-
-
+import backend.app.database.models as models_pkg
 from backend.app.database import (
     Base,
     ModelVersion,
@@ -17,30 +15,15 @@ from backend.app.database import (
     RepositorySnapshot,
     create_engine,
 )
-from backend.app.database.models import (
-    ModelVersion as MV,
-)
-from backend.app.database.models import (
-    Prediction as P,
-)
-from backend.app.database.models import (
-    PredictionExplanation as PE,
-)
-from backend.app.database.models import (
-    Repository as R,
-)
-from backend.app.database.models import (
-    RepositorySnapshot as RS,
-)
 
 
 def test_wildcard_import_and_export():
     """Sprint 1.9 Step 6 & 8: Verify models package exports all 5 domain models cleanly."""
-    assert R is Repository
-    assert RS is RepositorySnapshot
-    assert MV is ModelVersion
-    assert P is Prediction
-    assert PE is PredictionExplanation
+    assert models_pkg.Repository is Repository
+    assert models_pkg.RepositorySnapshot is RepositorySnapshot
+    assert models_pkg.ModelVersion is ModelVersion
+    assert models_pkg.Prediction is Prediction
+    assert models_pkg.PredictionExplanation is PredictionExplanation
 
 
 def test_mapper_configuration():
