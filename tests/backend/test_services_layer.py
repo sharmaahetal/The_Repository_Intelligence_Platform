@@ -147,15 +147,23 @@ async def test_snapshot_service_lifecycle(test_session_factory):
         )
 
     # Get latest snapshot
-    latest = await snap_service.get_latest_snapshot(repo.id)
+    latest = await snap_service.latest_snapshot(repo.id)
     assert latest.id == s1.id
 
+    # Get snapshot by timestamp
+    snap_at = await snap_service.get_snapshot(repo.id, now)
+    assert snap_at.id == s1.id
+
+    # Get non-existent timestamp raises SnapshotNotFound
+    with pytest.raises(SnapshotNotFound):
+        await snap_service.get_snapshot(repo.id, now - timedelta(days=100))
+
     # History listing
-    history = await snap_service.list_history(repo.id)
+    history = await snap_service.snapshot_history(repo.id)
     assert len(history) == 1
 
-    # Delete history before future timestamp
-    deleted_count = await snap_service.delete_history_before(repo.id, now + timedelta(hours=1))
+    # Delete old snapshots before future timestamp
+    deleted_count = await snap_service.delete_old_snapshots(now + timedelta(hours=1), repository_id=repo.id)
     assert deleted_count == 1
 
 

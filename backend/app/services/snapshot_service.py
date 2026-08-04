@@ -7,6 +7,7 @@ from typing import Any
 
 from backend.app.database.models.snapshot import RepositorySnapshot
 from backend.app.database.unit_of_work import UnitOfWork
+from backend.app.logging import logger
 from backend.app.services.exceptions import (
     DuplicateSnapshotError,
     RepositoryNotFound,
@@ -18,11 +19,31 @@ from backend.app.snapshots.snapshot_service import (
 
 
 class SnapshotService:
-    """Service layer enforcing domain rules for repository snapshots."""
+    """Service layer enforcing domain rules for time-series repository snapshots."""
 
     def __init__(self, uow: UnitOfWork | None = None) -> None:
-        """Initialize SnapshotService with optional UnitOfWork."""
-        self.uow = uow
+        """Initialize SnapshotService with injected or default UnitOfWork dependency."""
+        self.uow = uow or UnitOfWork()
+
+    async def _ensure_repository_exists(
+        self,
+        uow: UnitOfWork,
+        repository_id: int,
+    ) -> None:
+        """Validate that target repository exists in database."""
+        if not await uow.repositories.exists(repository_id):
+            raise RepositoryNotFound(repository_id)
+
+    async def _ensure_snapshot_not_exists(
+        self,
+        uow: UnitOfWork,
+        repository_id: int,
+        snapshot_time: datetime,
+    ) -> None:
+        """Validate that no snapshot exists at identical timestamp for repository."""
+        existing = await uow.snapshots.get_snapshot_at(repository_id, snapshot_time)
+        if existing is not None:
+            raise DuplicateSnapshotError(repository_id, snapshot_time)
 
     async def create_snapshot(
         self,
@@ -40,15 +61,11 @@ class SnapshotService:
         default_branch: str = "main",
     ) -> RepositorySnapshot:
         """Record a new point-in-time repository snapshot."""
-        async with UnitOfWork() as uow:
-            if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(repository_id)
+        async with self.uow as uow:
+            await self._ensure_repository_exists(uow, repository_id)
+            await self._ensure_snapshot_not_exists(uow, repository_id, snapshot_time)
 
-            existing = await uow.snapshots.get_snapshot_at(repository_id, snapshot_time)
-            if existing is not None:
-                raise DuplicateSnapshotError(repository_id, snapshot_time)
-
-            return await uow.snapshots.create(
+            snapshot = await uow.snapshots.create(
                 repository_id=repository_id,
                 snapshot_time=snapshot_time,
                 stars=stars,
@@ -62,33 +79,77 @@ class SnapshotService:
                 topics_json=topics_json,
                 default_branch=default_branch,
             )
+            await uow.commit()
+            logger.info(
+                "Snapshot created",
+                extra={"repository_id": repository_id, "snapshot_time": snapshot_time},
+            )
+            return snapshot
 
-    async def get_latest_snapshot(self, repository_id: int) -> RepositorySnapshot:
+    async def latest_snapshot(self, repository_id: int) -> RepositorySnapshot:
         """Retrieve the newest snapshot for a given repository."""
-        async with UnitOfWork() as uow:
-            if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(repository_id)
+        async with self.uow as uow:
+            await self._ensure_repository_exists(uow, repository_id)
 
             snapshot = await uow.snapshots.get_latest_snapshot(repository_id)
             if snapshot is None:
                 raise SnapshotNotFound(repository_id)
+
+            logger.info("Latest snapshot requested", extra={"repository_id": repository_id})
             return snapshot
 
-    async def list_history(self, repository_id: int) -> list[RepositorySnapshot]:
-        """Return chronological snapshot history for a repository."""
-        async with UnitOfWork() as uow:
-            if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(repository_id)
+    async def get_latest_snapshot(self, repository_id: int) -> RepositorySnapshot:
+        """Alias for latest_snapshot."""
+        return await self.latest_snapshot(repository_id)
 
-            return await uow.snapshots.list_repository_history(repository_id)
+    async def snapshot_history(self, repository_id: int) -> list[RepositorySnapshot]:
+        """Return chronological snapshot history for a repository."""
+        async with self.uow as uow:
+            await self._ensure_repository_exists(uow, repository_id)
+
+            history = await uow.snapshots.list_repository_history(repository_id)
+            logger.info("Snapshot history requested", extra={"repository_id": repository_id})
+            return history
+
+    async def list_history(self, repository_id: int) -> list[RepositorySnapshot]:
+        """Alias for snapshot_history."""
+        return await self.snapshot_history(repository_id)
+
+    async def get_snapshot(
+        self,
+        repository_id: int,
+        snapshot_time: datetime,
+    ) -> RepositorySnapshot:
+        """Retrieve a specific snapshot by repository ID and timestamp."""
+        async with self.uow as uow:
+            await self._ensure_repository_exists(uow, repository_id)
+
+            snapshot = await uow.snapshots.get_snapshot_at(repository_id, snapshot_time)
+            if snapshot is None:
+                raise SnapshotNotFound(repository_id)
+            return snapshot
+
+    async def delete_old_snapshots(
+        self,
+        before: datetime,
+        repository_id: int | None = None,
+    ) -> int:
+        """Purge snapshot history older than a specified datetime threshold."""
+        async with self.uow as uow:
+            if repository_id is not None:
+                await self._ensure_repository_exists(uow, repository_id)
+
+            deleted_count = await uow.snapshots.delete_before(before)
+            await uow.commit()
+            logger.info(
+                "Old snapshots deleted",
+                extra={"before": before, "deleted_count": deleted_count},
+            )
+            return deleted_count
 
     async def delete_history_before(self, repository_id: int, before: datetime) -> int:
-        """Purge snapshot history older than a specified datetime threshold."""
-        async with UnitOfWork() as uow:
-            if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(repository_id)
-
-            return await uow.snapshots.delete_before(before)
+        """Alias for delete_old_snapshots."""
+        return await self.delete_old_snapshots(before, repository_id=repository_id)
 
 
 # Re-export Collector SnapshotService as RepositorySnapshotService for pipeline backwards compatibility
