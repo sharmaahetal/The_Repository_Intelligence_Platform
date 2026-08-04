@@ -4,7 +4,7 @@ Stores SHAP feature importance breakdowns and narrative summaries for prediction
 """
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -31,17 +31,17 @@ class PredictionExplanation(Base, TimestampMixin):
         nullable=False,
         comment="Human-readable prediction narrative summary",
     )
-    top_positive_features: Mapped[dict[str, Any] | list[Any]] = mapped_column(
+    top_positive_features: Mapped[dict[str, float]] = mapped_column(
         JSON,
         nullable=False,
-        comment="Top positive feature contributions",
+        comment="Top positive feature SHAP contribution weights dictionary mapping",
     )
-    top_negative_features: Mapped[dict[str, Any] | list[Any]] = mapped_column(
+    top_negative_features: Mapped[dict[str, float]] = mapped_column(
         JSON,
         nullable=False,
-        comment="Top negative feature contributions",
+        comment="Top negative feature SHAP contribution weights dictionary mapping",
     )
-    shap_json: Mapped[dict[str, Any]] = mapped_column(
+    shap_json: Mapped[dict[str, float]] = mapped_column(
         JSON,
         nullable=False,
         comment="Full SHAP feature importance dictionary mapping",
