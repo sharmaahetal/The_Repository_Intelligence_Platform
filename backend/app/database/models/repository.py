@@ -3,8 +3,9 @@
 Tracks persistent repository metadata and entity identity.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database.base import Base, TimestampMixin
@@ -26,29 +27,35 @@ class Repository(Base, TimestampMixin):
         comment="External unique numeric GitHub repository ID",
     )
     owner: Mapped[str] = mapped_column(
+        String(100),
         index=True,
         nullable=False,
         comment="Repository owner organization or user handle",
     )
     name: Mapped[str] = mapped_column(
+        String(100),
         nullable=False,
         comment="Repository name",
     )
     full_name: Mapped[str] = mapped_column(
+        String(255),
         index=True,
         nullable=False,
         comment="Combined owner/name repository slug identifier",
     )
     default_branch: Mapped[str] = mapped_column(
+        String(100),
         default="main",
         nullable=False,
         comment="Primary Git branch name",
     )
     language: Mapped[str | None] = mapped_column(
+        String(50),
         nullable=True,
         comment="Primary programming language",
     )
     visibility: Mapped[str] = mapped_column(
+        String(20),
         default="public",
         nullable=False,
         comment="Repository visibility scope (e.g. public, private)",

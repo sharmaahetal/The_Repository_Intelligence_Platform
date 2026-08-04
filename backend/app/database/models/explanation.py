@@ -6,7 +6,7 @@ Stores SHAP feature importance breakdowns and narrative summaries for prediction
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, DateTime, ForeignKey
+from sqlalchemy import JSON, DateTime, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database.base import Base, TimestampMixin
@@ -28,6 +28,7 @@ class PredictionExplanation(Base, TimestampMixin):
         index=True,
     )
     summary: Mapped[str] = mapped_column(
+        Text,
         nullable=False,
         comment="Human-readable prediction narrative summary",
     )

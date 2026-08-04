@@ -6,7 +6,7 @@ Captures point-in-time time-series snapshots of repository metrics.
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, Index
+from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database.base import Base, TimestampMixin
@@ -40,9 +40,9 @@ class RepositorySnapshot(Base, TimestampMixin):
     subscribers: Mapped[int] = mapped_column(default=0, nullable=False)
     network_count: Mapped[int] = mapped_column(default=0, nullable=False)
     size_kb: Mapped[int] = mapped_column(default=0, nullable=False)
-    license: Mapped[str | None] = mapped_column(nullable=True)
+    license: Mapped[str | None] = mapped_column(String(50), nullable=True)
     topics_json: Mapped[dict[str, Any] | list[str] | None] = mapped_column(JSON, nullable=True)
-    default_branch: Mapped[str] = mapped_column(default="main", nullable=False)
+    default_branch: Mapped[str] = mapped_column(String(100), default="main", nullable=False)
     collected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -64,4 +64,3 @@ class RepositorySnapshot(Base, TimestampMixin):
         CheckConstraint("forks >= 0", name="forks_non_negative"),
         CheckConstraint("open_issues >= 0", name="open_issues_non_negative"),
     )
-
