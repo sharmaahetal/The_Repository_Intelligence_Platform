@@ -18,7 +18,9 @@ class RepositoryRepository(BaseRepository[Repository]):
 
     async def get_by_full_name(self, full_name: str) -> Repository | None:
         """Return a repository using owner/name slug."""
-        stmt = select(Repository).where(Repository.full_name == full_name)
+        stmt = select(Repository).where(
+            Repository.full_name == full_name,
+        )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -27,7 +29,9 @@ class RepositoryRepository(BaseRepository[Repository]):
         github_repository_id: int,
     ) -> Repository | None:
         """Return a repository using GitHub numeric ID."""
-        stmt = select(Repository).where(Repository.github_repository_id == github_repository_id)
+        stmt = select(Repository).where(
+            Repository.github_repository_id == github_repository_id,
+        )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -48,13 +52,23 @@ class RepositoryRepository(BaseRepository[Repository]):
         stmt = select(Repository)
 
         if owner is not None:
-            stmt = stmt.where(Repository.owner == owner)
+            stmt = stmt.where(
+                Repository.owner == owner,
+            )
         if language is not None:
-            stmt = stmt.where(Repository.language == language)
+            stmt = stmt.where(
+                Repository.language == language,
+            )
         if visibility is not None:
-            stmt = stmt.where(Repository.visibility == visibility)
+            stmt = stmt.where(
+                Repository.visibility == visibility,
+            )
         if archived is not None:
-            stmt = stmt.where(Repository.archived == archived)
+            stmt = stmt.where(
+                Repository.archived == archived,
+            )
+
+        stmt = stmt.order_by(Repository.full_name)
 
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
