@@ -20,6 +20,7 @@ from backend.app.database.models import (
     Repository,
     RepositorySnapshot,
 )
+from backend.app.database.repositories import BaseRepository
 from backend.app.database.session import (
     AsyncSessionLocal,
     SessionFactory,
@@ -50,4 +51,5 @@ __all__ = [
     "ModelVersion",
     "Prediction",
     "PredictionExplanation",
+    "BaseRepository",
 ]
