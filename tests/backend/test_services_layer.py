@@ -7,8 +7,11 @@ from backend.app.database import Base, create_engine
 from backend.app.database.unit_of_work import UnitOfWork
 from backend.app.services import (
     DuplicateSnapshotError,
+    InvalidPredictionRequest,
     ModelNotFound,
     ModelService,
+    ModelVersionAlreadyExists,
+    ModelVersionNotFound,
     PredictionService,
     RepositoryAlreadyExists,
     RepositoryNotFound,
@@ -55,7 +58,7 @@ async def test_repository_service_lifecycle(test_session_factory):
     assert r1.full_name == "django/django"
 
     # Duplicate full_name rejected
-    with pytest.raises(RepositoryAlreadyExists, match="django/django"):
+    with pytest.raises(RepositoryAlreadyExists, match="Repository 'django/django' already exists."):
         await repo_service.create_repository(
             owner="django",
             name="django",
@@ -64,7 +67,7 @@ async def test_repository_service_lifecycle(test_session_factory):
         )
 
     # Duplicate github_repository_id rejected
-    with pytest.raises(RepositoryAlreadyExists, match="8801"):
+    with pytest.raises(RepositoryAlreadyExists, match="Repository '8801' already exists."):
         await repo_service.create_repository(
             owner="django-fork",
             name="django",
@@ -77,7 +80,7 @@ async def test_repository_service_lifecycle(test_session_factory):
     assert fetched.full_name == "django/django"
 
     # Non-existent repository raises RepositoryNotFound
-    with pytest.raises(RepositoryNotFound):
+    with pytest.raises(RepositoryNotFound, match="Repository '99999' was not found."):
         await repo_service.get_repository(repository_id=99999)
 
     # Search
@@ -118,14 +121,14 @@ async def test_snapshot_service_lifecycle(test_session_factory):
     assert s1.id is not None
 
     # Creating snapshot for non-existent repo raises RepositoryNotFound
-    with pytest.raises(RepositoryNotFound):
+    with pytest.raises(RepositoryNotFound, match="Repository '9999' was not found."):
         await snap_service.create_snapshot(
             repository_id=9999,
             snapshot_time=now,
         )
 
     # Duplicate snapshot at exact timestamp raises DuplicateSnapshotError
-    with pytest.raises(DuplicateSnapshotError):
+    with pytest.raises(DuplicateSnapshotError, match=f"Snapshot for repository '{repo.id}'"):
         await snap_service.create_snapshot(
             repository_id=repo.id,
             snapshot_time=now,
@@ -165,8 +168,8 @@ async def test_model_service_lifecycle(test_session_factory):
     )
     assert m1.id is not None
 
-    # Registering duplicate version raises ServiceException
-    with pytest.raises(Exception, match="v1.0.0"):
+    # Registering duplicate version raises ModelVersionAlreadyExists
+    with pytest.raises(ModelVersionAlreadyExists, match="Model version 'v1.0.0' already exists."):
         await model_service.register_model(
             version="v1.0.0",
             algorithm="random_forest",
@@ -206,8 +209,8 @@ async def test_model_service_lifecycle(test_session_factory):
     by_version = await model_service.get_model_by_version("v1.0.0")
     assert by_version.id == m1.id
 
-    # Non-existent version raises ModelNotFound
-    with pytest.raises(ModelNotFound):
+    # Non-existent version raises ModelVersionNotFound
+    with pytest.raises(ModelVersionNotFound, match="Model version 'v9.9.9' was not found."):
         await model_service.get_model_by_version("v9.9.9")
 
 
@@ -240,8 +243,27 @@ async def test_prediction_service_lifecycle(test_session_factory):
         artifact_path="/models/lgb.pkl",
     )
 
+    # Invalid prediction horizon days raises InvalidPredictionRequest
+    with pytest.raises(InvalidPredictionRequest, match="prediction_horizon_days must be greater than 0"):
+        await pred_service.create_prediction(
+            repository_snapshot_id=snap.id,
+            model_version_id=model.id,
+            predicted_growth=15.0,
+            confidence=0.90,
+            prediction_horizon_days=0,
+        )
+
+    # Invalid confidence raises InvalidPredictionRequest
+    with pytest.raises(InvalidPredictionRequest, match="confidence must be between 0.0 and 1.0"):
+        await pred_service.create_prediction(
+            repository_snapshot_id=snap.id,
+            model_version_id=model.id,
+            predicted_growth=15.0,
+            confidence=1.5,
+        )
+
     # Invalid snapshot ID raises SnapshotNotFound
-    with pytest.raises(SnapshotNotFound):
+    with pytest.raises(SnapshotNotFound, match="Snapshot '9999' was not found."):
         await pred_service.create_prediction(
             repository_snapshot_id=9999,
             model_version_id=model.id,
@@ -249,8 +271,8 @@ async def test_prediction_service_lifecycle(test_session_factory):
             confidence=0.90,
         )
 
-    # Invalid model version ID raises ModelNotFound
-    with pytest.raises(ModelNotFound):
+    # Invalid model version ID raises ModelNotFound / ModelVersionNotFound
+    with pytest.raises(ModelNotFound, match="Model version '9999' was not found."):
         await pred_service.create_prediction(
             repository_snapshot_id=snap.id,
             model_version_id=9999,
@@ -278,3 +300,7 @@ async def test_prediction_service_lifecycle(test_session_factory):
     # High confidence predictions
     high_conf = await pred_service.get_high_confidence_predictions(minimum_confidence=0.90)
     assert len(high_conf) == 1
+
+    # Invalid minimum confidence raises InvalidPredictionRequest
+    with pytest.raises(InvalidPredictionRequest):
+        await pred_service.get_high_confidence_predictions(minimum_confidence=-0.5)

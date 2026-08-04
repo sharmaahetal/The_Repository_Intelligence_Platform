@@ -42,13 +42,11 @@ class SnapshotService:
         """Record a new point-in-time repository snapshot."""
         async with UnitOfWork() as uow:
             if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(f"Repository ID {repository_id} not found.")
+                raise RepositoryNotFound(repository_id)
 
             existing = await uow.snapshots.get_snapshot_at(repository_id, snapshot_time)
             if existing is not None:
-                raise DuplicateSnapshotError(
-                    f"Snapshot for repository {repository_id} at {snapshot_time} already exists."
-                )
+                raise DuplicateSnapshotError(repository_id, snapshot_time)
 
             return await uow.snapshots.create(
                 repository_id=repository_id,
@@ -69,18 +67,18 @@ class SnapshotService:
         """Retrieve the newest snapshot for a given repository."""
         async with UnitOfWork() as uow:
             if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(f"Repository ID {repository_id} not found.")
+                raise RepositoryNotFound(repository_id)
 
             snapshot = await uow.snapshots.get_latest_snapshot(repository_id)
             if snapshot is None:
-                raise SnapshotNotFound(f"No snapshots found for repository ID {repository_id}.")
+                raise SnapshotNotFound(repository_id)
             return snapshot
 
     async def list_history(self, repository_id: int) -> list[RepositorySnapshot]:
         """Return chronological snapshot history for a repository."""
         async with UnitOfWork() as uow:
             if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(f"Repository ID {repository_id} not found.")
+                raise RepositoryNotFound(repository_id)
 
             return await uow.snapshots.list_repository_history(repository_id)
 
@@ -88,7 +86,7 @@ class SnapshotService:
         """Purge snapshot history older than a specified datetime threshold."""
         async with UnitOfWork() as uow:
             if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(f"Repository ID {repository_id} not found.")
+                raise RepositoryNotFound(repository_id)
 
             return await uow.snapshots.delete_before(before)
 

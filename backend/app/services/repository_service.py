@@ -48,7 +48,7 @@ class RepositoryService:
                         "Repository creation rejected: full_name already exists",
                         extra={"full_name": full_name},
                     )
-                    raise RepositoryAlreadyExists(f"Repository '{full_name}' already exists.")
+                    raise RepositoryAlreadyExists(full_name)
 
                 existing_by_id = await uow.repositories.get_by_github_id(github_repository_id)
                 if existing_by_id is not None:
@@ -56,9 +56,7 @@ class RepositoryService:
                         "Repository creation rejected: github_repository_id already exists",
                         extra={"github_repository_id": github_repository_id},
                     )
-                    raise RepositoryAlreadyExists(
-                        f"Repository with GitHub ID {github_repository_id} already exists."
-                    )
+                    raise RepositoryAlreadyExists(github_repository_id)
 
                 repo = await uow.repositories.create(
                     owner=owner,
@@ -76,13 +74,11 @@ class RepositoryService:
         else:
             async with UnitOfWork() as uow:
                 if await uow.repositories.exists_by_full_name(full_name):
-                    raise RepositoryAlreadyExists(f"Repository '{full_name}' already exists.")
+                    raise RepositoryAlreadyExists(full_name)
 
                 existing_by_id = await uow.repositories.get_by_github_id(github_repository_id)
                 if existing_by_id is not None:
-                    raise RepositoryAlreadyExists(
-                        f"Repository with GitHub ID {github_repository_id} already exists."
-                    )
+                    raise RepositoryAlreadyExists(github_repository_id)
 
                 return await uow.repositories.create(
                     owner=owner,
@@ -106,15 +102,20 @@ class RepositoryService:
         """Retrieve a repository entity by ID, full name, or GitHub ID."""
         async with UnitOfWork() as uow:
             repo: Repository | None = None
+            identifier: str | int = "unknown"
+
             if repository_id is not None:
+                identifier = repository_id
                 repo = await uow.repositories.get_by_id(repository_id)
             elif full_name is not None:
+                identifier = full_name
                 repo = await uow.repositories.get_by_full_name(full_name)
             elif github_repository_id is not None:
+                identifier = github_repository_id
                 repo = await uow.repositories.get_by_github_id(github_repository_id)
 
             if repo is None:
-                raise RepositoryNotFound("Requested repository entity was not found.")
+                raise RepositoryNotFound(identifier)
             return repo
 
     async def search(
@@ -142,11 +143,11 @@ class RepositoryService:
         """Update an existing repository entity."""
         async with UnitOfWork() as uow:
             if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(f"Repository ID {repository_id} not found.")
+                raise RepositoryNotFound(repository_id)
 
             updated = await uow.repositories.update(repository_id, attributes)
             if updated is None:
-                raise RepositoryNotFound(f"Repository ID {repository_id} not found.")
+                raise RepositoryNotFound(repository_id)
             return updated
 
     async def delete(
@@ -156,6 +157,6 @@ class RepositoryService:
         """Delete a repository entity."""
         async with UnitOfWork() as uow:
             if not await uow.repositories.exists(repository_id):
-                raise RepositoryNotFound(f"Repository ID {repository_id} not found.")
+                raise RepositoryNotFound(repository_id)
 
             return await uow.repositories.delete(repository_id)

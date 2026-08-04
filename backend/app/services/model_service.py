@@ -7,7 +7,10 @@ from typing import Any
 
 from backend.app.database.models.model_version import ModelVersion
 from backend.app.database.unit_of_work import UnitOfWork
-from backend.app.services.exceptions import ModelNotFound, ServiceException
+from backend.app.services.exceptions import (
+    ModelVersionAlreadyExists,
+    ModelVersionNotFound,
+)
 
 
 class ModelService:
@@ -40,7 +43,7 @@ class ModelService:
         """Register a new trained model version after ensuring semantic version uniqueness."""
         async with UnitOfWork() as uow:
             if await uow.model_versions.exists_by_version(version):
-                raise ServiceException(f"Model version '{version}' is already registered.")
+                raise ModelVersionAlreadyExists(version)
 
             create_kwargs: dict[str, Any] = {
                 "version": version,
@@ -68,7 +71,7 @@ class ModelService:
         async with UnitOfWork() as uow:
             model = await uow.model_versions.latest_version()
             if model is None:
-                raise ModelNotFound("No trained model versions are registered.")
+                raise ModelVersionNotFound("latest")
             return model
 
     async def get_best_model(self, metric: str = "f1") -> ModelVersion:
@@ -76,7 +79,7 @@ class ModelService:
         async with UnitOfWork() as uow:
             model = await uow.model_versions.best_model(metric=metric)
             if model is None:
-                raise ModelNotFound(f"No trained model versions found to calculate best model by '{metric}'.")
+                raise ModelVersionNotFound(f"best by {metric}")
             return model
 
     async def get_model_by_version(self, version: str) -> ModelVersion:
@@ -84,7 +87,7 @@ class ModelService:
         async with UnitOfWork() as uow:
             model = await uow.model_versions.get_by_version(version)
             if model is None:
-                raise ModelNotFound(f"Model version '{version}' was not found.")
+                raise ModelVersionNotFound(version)
             return model
 
     async def list_models(self) -> list[ModelVersion]:
