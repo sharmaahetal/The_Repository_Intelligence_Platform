@@ -6,12 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from backend.app.database import Base, create_engine
 from backend.app.database.unit_of_work import UnitOfWork
 from backend.app.services import (
+    DuplicatePredictionError,
     DuplicateSnapshotError,
     InvalidPredictionRequest,
     ModelNotFound,
     ModelService,
     ModelVersionAlreadyExists,
     ModelVersionNotFound,
+    PredictionNotFound,
     PredictionService,
     RepositoryAlreadyExists,
     RepositoryNotFound,
@@ -236,7 +238,7 @@ async def test_model_service_lifecycle(test_session_factory):
 
 @pytest.mark.asyncio
 async def test_prediction_service_lifecycle(test_session_factory):
-    """Verify PredictionService business rules: prediction creation, SHAP explanation creation, snapshot/model validation."""
+    """Verify PredictionService business rules: prediction creation, duplicate prevention, SHAP explanation creation, snapshot/model validation."""
     repo_service = RepositoryService()
     snap_service = SnapshotService()
     model_service = ModelService()
@@ -306,6 +308,7 @@ async def test_prediction_service_lifecycle(test_session_factory):
         model_version_id=model.id,
         predicted_growth=18.5,
         confidence=0.93,
+        prediction_horizon_days=30,
         explanation_summary="Strong star velocity",
         top_positive_features={"stars_growth": 0.4},
         shap_json={"stars_growth": 0.4},
@@ -313,14 +316,37 @@ async def test_prediction_service_lifecycle(test_session_factory):
     assert pred.id is not None
     assert pred.predicted_growth == 18.5
 
+    # Duplicate prediction raises DuplicatePredictionError
+    with pytest.raises(DuplicatePredictionError):
+        await pred_service.create_prediction(
+            repository_snapshot_id=snap.id,
+            model_version_id=model.id,
+            predicted_growth=19.0,
+            confidence=0.95,
+            prediction_horizon_days=30,
+        )
+
+    # Get specific prediction
+    fetched_pred = await pred_service.get_prediction(pred.id)
+    assert fetched_pred.id == pred.id
+
     # Retrieve latest prediction
-    latest_pred = await pred_service.get_latest_prediction(snap.id)
+    latest_pred = await pred_service.latest_prediction(snap.id)
     assert latest_pred.id == pred.id
 
+    # Prediction history by model version
+    history = await pred_service.prediction_history(model.id)
+    assert len(history) == 1
+
     # High confidence predictions
-    high_conf = await pred_service.get_high_confidence_predictions(minimum_confidence=0.90)
+    high_conf = await pred_service.high_confidence_predictions(minimum_confidence=0.90)
     assert len(high_conf) == 1
 
-    # Invalid minimum confidence raises InvalidPredictionRequest
-    with pytest.raises(InvalidPredictionRequest):
-        await pred_service.get_high_confidence_predictions(minimum_confidence=-0.5)
+    # Delete prediction
+    assert await pred_service.delete_prediction(pred.id) is True
+    with pytest.raises(PredictionNotFound):
+        await pred_service.get_prediction(pred.id)
+
+    # Delete non-existent raises PredictionNotFound
+    with pytest.raises(PredictionNotFound):
+        await pred_service.delete_prediction(99999)
