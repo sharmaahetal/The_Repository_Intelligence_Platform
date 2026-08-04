@@ -124,12 +124,14 @@ async def test_entity_repositories_custom_methods(tmp_path):
         )
 
         assert (await model_dao.latest_version()).id == mv2.id
-        assert (await model_dao.get_version("v1.0.0")).id == mv1.id
+        assert (await model_dao.get_by_version("v1.0.0")).id == mv1.id
+        assert await model_dao.exists_by_version("v1.0.0") is True
+        assert await model_dao.exists_by_version("v9.9.9") is False
 
         best_f1 = await model_dao.best_model(metric="f1")
         assert best_f1.id == mv2.id
 
-        with pytest.raises(ValueError, match="Invalid metric"):
+        with pytest.raises(ValueError, match="Unsupported metric: invalid_metric"):
             await model_dao.best_model(metric="invalid_metric")
 
         versions = await model_dao.list_versions()
