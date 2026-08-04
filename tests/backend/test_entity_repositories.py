@@ -148,8 +148,10 @@ async def test_entity_repositories_custom_methods(tmp_path):
 
         assert (await pred_dao.latest_prediction(s2.id)).id == p1.id
         assert len(await pred_dao.list_predictions(repository_snapshot_id=s2.id)) == 1
-        assert len(await pred_dao.latest_by_model(mv2.id)) == 1
-        assert len(await pred_dao.prediction_history(s2.id)) == 1
+        assert (await pred_dao.latest_by_model(mv2.id)).id == p1.id
+        assert len(await pred_dao.prediction_history(model_version_id=mv2.id)) == 1
+        assert len(await pred_dao.high_confidence_predictions(minimum_confidence=0.90)) == 1
+        assert len(await pred_dao.high_confidence_predictions(minimum_confidence=0.95)) == 0
 
         # 5. Test PredictionExplanationRepository
         e1 = await expl_dao.create(
