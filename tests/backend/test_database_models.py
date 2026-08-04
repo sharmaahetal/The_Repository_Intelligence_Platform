@@ -43,6 +43,12 @@ def test_indexes_and_constraints_registered():
     model_ck_names = [ck.name for ck in model_table.constraints if hasattr(ck, "name")]
     assert "ck_model_versions_accuracy_range" in model_ck_names
 
+    # Verify String length specifications
+    assert model_table.columns["version"].type.length == 32
+    assert model_table.columns["algorithm"].type.length == 50
+    assert model_table.columns["training_dataset_hash"].type.length == 64
+    assert model_table.columns["artifact_path"].type.length == 512
+
 
 @pytest.mark.asyncio
 async def test_end_to_end_orm_persistence_flow(tmp_path):
@@ -86,11 +92,11 @@ async def test_end_to_end_orm_persistence_flow(tmp_path):
         assert snapshot.id is not None
         assert snapshot.repository_id == repo.id
 
-        # 3. Create ModelVersion
+        # 3. Create ModelVersion with audit metadata
         model_ver = ModelVersion(
             version="v1.0.0",
             algorithm="xgboost",
-            training_dataset_hash="a1b2c3d4e5f67890",
+            training_dataset_hash="a1b2c3d4e5f67890" * 4,  # 64 chars
             feature_schema_version="1.0",
             accuracy=0.88,
             precision=0.86,
@@ -99,11 +105,19 @@ async def test_end_to_end_orm_persistence_flow(tmp_path):
             auc=0.92,
             artifact_path="artifacts/registry/v1.0.0.json",
             trained_at=datetime.now(UTC),
+            training_duration_seconds=124.5,
+            cross_validation_score=0.892,
+            dataset_size=15000,
+            random_seed=42,
+            git_commit_hash="abcdef0123456789abcdef0123456789abcdef01",
         )
         session.add(model_ver)
         await session.commit()
         await session.refresh(model_ver)
         assert model_ver.id is not None
+        assert model_ver.training_duration_seconds == 124.5
+        assert model_ver.dataset_size == 15000
+        assert model_ver.random_seed == 42
 
         # 4. Create Prediction
         prediction = Prediction(
