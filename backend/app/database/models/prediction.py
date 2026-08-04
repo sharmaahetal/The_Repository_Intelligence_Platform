@@ -6,7 +6,7 @@ Tracks ML inference output predictions linked to repository snapshots and model 
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database.base import Base, TimestampMixin
@@ -67,7 +67,12 @@ class Prediction(Base, TimestampMixin):
 
     __table_args__ = (
         Index("ix_predictions_created_at", "created_at"),
+        UniqueConstraint(
+            "repository_snapshot_id",
+            "model_version_id",
+            "prediction_horizon_days",
+            name="prediction_model_snapshot_horizon",
+        ),
         CheckConstraint("prediction_horizon_days > 0", name="horizon_positive"),
         CheckConstraint("confidence >= 0 AND confidence <= 1", name="confidence_range"),
     )
-

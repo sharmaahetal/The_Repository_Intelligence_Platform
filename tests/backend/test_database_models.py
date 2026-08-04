@@ -49,6 +49,14 @@ def test_indexes_and_constraints_registered():
     assert model_table.columns["training_dataset_hash"].type.length == 64
     assert model_table.columns["artifact_path"].type.length == 512
 
+    # Verify Prediction unique constraint
+    pred_table = Base.metadata.tables["predictions"]
+    pred_uq_names = [c.name for c in pred_table.constraints if c.name is not None]
+    assert any("prediction_model_snapshot_horizon" in name for name in pred_uq_names)
+
+
+
+
 
 @pytest.mark.asyncio
 async def test_end_to_end_orm_persistence_flow(tmp_path):
