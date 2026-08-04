@@ -72,7 +72,7 @@ class SnapshotRepository(BaseRepository[RepositorySnapshot]):
     ) -> int:
         """Return the number of snapshots for a repository."""
         stmt = (
-            select(func.count(1))
+            select(func.count(RepositorySnapshot.id))
             .select_from(RepositorySnapshot)
             .where(
                 RepositorySnapshot.repository_id == repository_id,
@@ -86,12 +86,8 @@ class SnapshotRepository(BaseRepository[RepositorySnapshot]):
         before: datetime,
     ) -> int:
         """Delete all snapshots older than the given timestamp."""
-        stmt = (
-            delete(RepositorySnapshot)
-            .where(
-                RepositorySnapshot.snapshot_time < before,
-            )
-            .execution_options(synchronize_session="fetch")
+        stmt = delete(RepositorySnapshot).where(
+            RepositorySnapshot.snapshot_time < before,
         )
         result = await self.session.execute(stmt)
         await self.session.flush()

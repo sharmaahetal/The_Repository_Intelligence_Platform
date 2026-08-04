@@ -166,8 +166,10 @@ async def test_entity_repositories_custom_methods(tmp_path):
         assert await expl_dao.exists_for_prediction(p1.id) is False
 
         # Test SnapshotRepository delete_before
+        target_repo_id = r1.id
+        session.expire_all()
         deleted_snapshots = await snap_dao.delete_before(t2)
         assert deleted_snapshots == 1
-        assert await snap_dao.count_snapshots(r1.id) == 1
+        assert await snap_dao.count_snapshots(target_repo_id) == 1
 
     await test_engine.dispose()
