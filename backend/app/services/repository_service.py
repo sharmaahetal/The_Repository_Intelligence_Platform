@@ -17,8 +17,8 @@ class RepositoryService:
     """Service layer enforcing domain business rules for GitHub repositories."""
 
     def __init__(self, uow: UnitOfWork | None = None) -> None:
-        """Initialize RepositoryService with injected or default UnitOfWork dependency."""
-        self.uow = uow or UnitOfWork()
+        """Initialize RepositoryService with optional injected UnitOfWork context."""
+        self.uow = uow
 
     async def create_repository(
         self,
@@ -34,7 +34,8 @@ class RepositoryService:
         fork: bool = False,
     ) -> Repository:
         """Create a new GitHub repository after validating uniqueness."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             if await uow.repositories.exists_by_full_name(full_name):
                 logger.warning(
                     "Repository creation rejected: full_name already exists",
@@ -78,7 +79,8 @@ class RepositoryService:
                 "At least one lookup identifier (repository_id, full_name, or github_repository_id) must be provided."
             )
 
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             repo: Repository | None = None
             identifier: str | int = "unknown"
 
@@ -102,7 +104,8 @@ class RepositoryService:
         **attributes: Any,
     ) -> Repository:
         """Update an existing repository entity."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             updated = await uow.repositories.update(repository_id, attributes)
             if updated is None:
                 raise RepositoryNotFound(repository_id)
@@ -116,7 +119,8 @@ class RepositoryService:
         repository_id: int,
     ) -> bool:
         """Delete a repository entity."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             deleted = await uow.repositories.delete(repository_id)
             if not deleted:
                 raise RepositoryNotFound(repository_id)
@@ -134,7 +138,8 @@ class RepositoryService:
         archived: bool | None = None,
     ) -> list[Repository]:
         """Search repositories using domain filtering criteria."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             return await uow.repositories.search(
                 owner=owner,
                 language=language,

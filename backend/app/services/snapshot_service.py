@@ -22,8 +22,8 @@ class SnapshotService:
     """Service layer enforcing domain rules for time-series repository snapshots."""
 
     def __init__(self, uow: UnitOfWork | None = None) -> None:
-        """Initialize SnapshotService with injected or default UnitOfWork dependency."""
-        self.uow = uow or UnitOfWork()
+        """Initialize SnapshotService with optional injected UnitOfWork context."""
+        self.uow = uow
 
     async def _ensure_repository_exists(
         self,
@@ -61,7 +61,8 @@ class SnapshotService:
         default_branch: str = "main",
     ) -> RepositorySnapshot:
         """Record a new point-in-time repository snapshot."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             await self._ensure_repository_exists(uow, repository_id)
             await self._ensure_snapshot_not_exists(uow, repository_id, snapshot_time)
 
@@ -88,7 +89,8 @@ class SnapshotService:
 
     async def latest_snapshot(self, repository_id: int) -> RepositorySnapshot:
         """Retrieve the newest snapshot for a given repository."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             await self._ensure_repository_exists(uow, repository_id)
 
             snapshot = await uow.snapshots.get_latest_snapshot(repository_id)
@@ -104,7 +106,8 @@ class SnapshotService:
 
     async def snapshot_history(self, repository_id: int) -> list[RepositorySnapshot]:
         """Return chronological snapshot history for a repository."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             await self._ensure_repository_exists(uow, repository_id)
 
             history = await uow.snapshots.list_repository_history(repository_id)
@@ -121,7 +124,8 @@ class SnapshotService:
         snapshot_time: datetime,
     ) -> RepositorySnapshot:
         """Retrieve a specific snapshot by repository ID and timestamp."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             await self._ensure_repository_exists(uow, repository_id)
 
             snapshot = await uow.snapshots.get_snapshot_at(repository_id, snapshot_time)
@@ -135,7 +139,8 @@ class SnapshotService:
         repository_id: int | None = None,
     ) -> int:
         """Purge snapshot history older than a specified datetime threshold."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             if repository_id is not None:
                 await self._ensure_repository_exists(uow, repository_id)
 

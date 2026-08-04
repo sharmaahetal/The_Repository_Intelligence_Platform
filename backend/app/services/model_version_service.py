@@ -18,8 +18,8 @@ class ModelVersionService:
     """Service layer enforcing domain rules for trained machine learning model versions."""
 
     def __init__(self, uow: UnitOfWork | None = None) -> None:
-        """Initialize ModelVersionService with injected or default UnitOfWork dependency."""
-        self.uow = uow or UnitOfWork()
+        """Initialize ModelVersionService with optional injected UnitOfWork context."""
+        self.uow = uow
 
     async def _ensure_model_exists(self, uow: UnitOfWork, model_id: int) -> None:
         """Validate that target model version exists in database."""
@@ -52,7 +52,8 @@ class ModelVersionService:
         git_commit_hash: str | None = None,
     ) -> ModelVersion:
         """Register a new trained model version after ensuring semantic version uniqueness."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             await self._ensure_version_unique(uow, version)
 
             create_kwargs: dict[str, Any] = {
@@ -76,7 +77,7 @@ class ModelVersionService:
 
             model = await uow.model_versions.create(**create_kwargs)
             await uow.commit()
-            logger.info("model registered", extra={"version": version, "algorithm": algorithm})
+            logger.info("Model registered", extra={"version": version, "algorithm": algorithm})
             return model
 
     async def get_model(
@@ -88,7 +89,8 @@ class ModelVersionService:
         if model_id is None and version is None:
             raise ValueError("Either model_id or version string must be provided.")
 
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             model: ModelVersion | None = None
             if model_id is not None:
                 model = await uow.model_versions.get_by_id(model_id)
@@ -96,7 +98,9 @@ class ModelVersionService:
                 model = await uow.model_versions.get_by_version(version)
 
             if model is None:
-                raise ModelVersionNotFound(model_id if model_id is not None else (version or "unknown"))
+                identifier: int | str = model_id if model_id is not None else (version or "unknown")
+                raise ModelVersionNotFound(identifier)
+
             return model
 
     async def get_model_by_version(self, version: str) -> ModelVersion:
@@ -105,11 +109,12 @@ class ModelVersionService:
 
     async def latest_model(self) -> ModelVersion:
         """Retrieve the newest trained model version."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             model = await uow.model_versions.latest_version()
             if model is None:
                 raise ModelVersionNotFound("latest")
-            logger.info("latest model requested")
+            logger.info("Latest model requested")
             return model
 
     async def get_latest_model(self) -> ModelVersion:
@@ -118,11 +123,12 @@ class ModelVersionService:
 
     async def best_model(self, metric: str = "f1") -> ModelVersion:
         """Retrieve the model version possessing the highest metric score."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             model = await uow.model_versions.best_model(metric=metric)
             if model is None:
                 raise ModelVersionNotFound(f"best_{metric}")
-            logger.info("best model requested", extra={"metric": metric})
+            logger.info("Best model requested", extra={"metric": metric})
             return model
 
     async def get_best_model(self, metric: str = "f1") -> ModelVersion:
@@ -131,7 +137,8 @@ class ModelVersionService:
 
     async def list_models(self) -> list[ModelVersion]:
         """Return all registered model versions sorted newest first."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             return await uow.model_versions.list_versions()
 
     async def update_model(
@@ -140,7 +147,8 @@ class ModelVersionService:
         **attributes: Any,
     ) -> ModelVersion:
         """Update an existing model version entity."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             await self._ensure_model_exists(uow, model_id)
 
             updated = await uow.model_versions.update(model_id, attributes)
@@ -148,7 +156,7 @@ class ModelVersionService:
                 raise ModelVersionNotFound(model_id)
 
             await uow.commit()
-            logger.info("model updated", extra={"model_id": model_id})
+            logger.info("Model updated", extra={"model_id": model_id})
             return updated
 
     async def delete_model(
@@ -156,10 +164,11 @@ class ModelVersionService:
         model_id: int,
     ) -> bool:
         """Delete a model version entity from registry."""
-        async with self.uow as uow:
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
             await self._ensure_model_exists(uow, model_id)
 
             deleted = await uow.model_versions.delete(model_id)
             await uow.commit()
-            logger.info("model deleted", extra={"model_id": model_id})
+            logger.info("Model deleted", extra={"model_id": model_id})
             return deleted
