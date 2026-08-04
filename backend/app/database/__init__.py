@@ -20,7 +20,14 @@ from backend.app.database.models import (
     Repository,
     RepositorySnapshot,
 )
-from backend.app.database.repositories import BaseRepository
+from backend.app.database.repositories import (
+    BaseRepository,
+    ModelVersionRepository,
+    PredictionExplanationRepository,
+    PredictionRepository,
+    RepositoryRepository,
+    SnapshotRepository,
+)
 from backend.app.database.session import (
     AsyncSessionLocal,
     SessionFactory,
@@ -52,4 +59,9 @@ __all__ = [
     "Prediction",
     "PredictionExplanation",
     "BaseRepository",
+    "RepositoryRepository",
+    "SnapshotRepository",
+    "PredictionRepository",
+    "ModelVersionRepository",
+    "PredictionExplanationRepository",
 ]
