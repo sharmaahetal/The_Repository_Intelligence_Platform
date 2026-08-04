@@ -5,19 +5,12 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 from backend.app.core.settings import settings
+import backend.app.database.models
 from backend.app.database.base import ORM_METADATA
-
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
-config = context.config
-
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
 
 # Model metadata for 'autogenerate' support
 target_metadata = ORM_METADATA
+
 
 
 def run_migrations_offline() -> None:
