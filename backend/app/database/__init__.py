@@ -35,6 +35,7 @@ from backend.app.database.session import (
     get_db_session,
     get_session_factory,
 )
+from backend.app.database.unit_of_work import UnitOfWork
 
 __all__ = [
     "Base",
@@ -64,4 +65,5 @@ __all__ = [
     "PredictionRepository",
     "ModelVersionRepository",
     "PredictionExplanationRepository",
+    "UnitOfWork",
 ]
