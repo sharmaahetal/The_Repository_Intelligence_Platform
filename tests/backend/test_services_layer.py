@@ -84,15 +84,15 @@ async def test_repository_service_lifecycle(test_session_factory):
         await repo_service.get_repository(repository_id=99999)
 
     # Search
-    results = await repo_service.search(owner="django")
+    results = await repo_service.search_repositories(owner="django")
     assert len(results) == 1
 
     # Update
-    updated = await repo_service.update(r1.id, default_branch="master")
+    updated = await repo_service.update_repository(r1.id, default_branch="master")
     assert updated.default_branch == "master"
 
     # Delete
-    assert await repo_service.delete(r1.id) is True
+    assert await repo_service.delete_repository(r1.id) is True
     with pytest.raises(RepositoryNotFound):
         await repo_service.get_repository(repository_id=r1.id)
 
