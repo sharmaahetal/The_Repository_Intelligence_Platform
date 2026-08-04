@@ -13,6 +13,13 @@ from backend.app.database.engine import (
     engine,
     get_engine,
 )
+from backend.app.database.models import (
+    ModelVersion,
+    Prediction,
+    PredictionExplanation,
+    Repository,
+    RepositorySnapshot,
+)
 from backend.app.database.session import (
     AsyncSessionLocal,
     SessionFactory,
@@ -38,4 +45,9 @@ __all__ = [
     "create_sessionmaker",
     "get_session_factory",
     "get_db_session",
+    "Repository",
+    "RepositorySnapshot",
+    "ModelVersion",
+    "Prediction",
+    "PredictionExplanation",
 ]
