@@ -46,9 +46,7 @@ class DuplicateSnapshotError(ServiceError):
 
     def __init__(self, repository_id: int, snapshot_time: Any) -> None:
         """Format duplicate snapshot exception message."""
-        super().__init__(
-            f"Snapshot for repository '{repository_id}' at '{snapshot_time}' already exists."
-        )
+        super().__init__(f"Snapshot for repository '{repository_id}' at '{snapshot_time}' already exists.")
         self.repository_id = repository_id
         self.snapshot_time = snapshot_time
 
@@ -125,32 +123,20 @@ class PredictionExplanationAlreadyExists(ServiceError):
         self.prediction_id = prediction_id
 
 
-# Aliases for backward compatibility
-ServiceException = ServiceError
-RepositoryAlreadyExistsError = RepositoryAlreadyExists
-RepositoryNotFoundError = RepositoryNotFound
-SnapshotNotFoundError = SnapshotNotFound
-PredictionNotFoundError = PredictionNotFound
+# Alias for backward compatibility across pipeline callers
 ModelNotFound = ModelVersionNotFound
-ModelNotFoundError = ModelVersionNotFound
 
 __all__ = [
     "ServiceError",
-    "ServiceException",
     "RepositoryAlreadyExists",
-    "RepositoryAlreadyExistsError",
     "RepositoryNotFound",
-    "RepositoryNotFoundError",
     "SnapshotNotFound",
-    "SnapshotNotFoundError",
     "DuplicateSnapshotError",
     "PredictionNotFound",
-    "PredictionNotFoundError",
     "DuplicatePredictionError",
     "InvalidPredictionRequest",
     "ModelVersionNotFound",
     "ModelNotFound",
-    "ModelNotFoundError",
     "ModelVersionAlreadyExists",
     "InvalidModelVersion",
     "PredictionExplanationNotFound",
