@@ -12,7 +12,6 @@ from backend.app.database.base import ORM_METADATA
 target_metadata = ORM_METADATA
 
 
-
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -24,6 +23,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -35,6 +35,7 @@ def do_run_migrations(connection) -> None:
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
