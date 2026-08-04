@@ -22,6 +22,7 @@ from backend.app.services.exceptions import (
     SnapshotNotFoundError,
 )
 from backend.app.services.model_service import ModelService
+from backend.app.services.model_version_service import ModelVersionService
 from backend.app.services.prediction_service import PredictionService
 from backend.app.services.repository_service import RepositoryService
 from backend.app.services.snapshot_service import (
@@ -54,4 +55,5 @@ __all__ = [
     "RepositorySnapshotService",
     "PredictionService",
     "ModelService",
+    "ModelVersionService",
 ]

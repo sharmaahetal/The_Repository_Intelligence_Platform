@@ -10,9 +10,9 @@ from backend.app.services import (
     DuplicateSnapshotError,
     InvalidPredictionRequest,
     ModelNotFound,
-    ModelService,
     ModelVersionAlreadyExists,
     ModelVersionNotFound,
+    ModelVersionService,
     PredictionNotFound,
     PredictionService,
     RepositoryAlreadyExists,
@@ -170,9 +170,9 @@ async def test_snapshot_service_lifecycle(test_session_factory):
 
 
 @pytest.mark.asyncio
-async def test_model_service_lifecycle(test_session_factory):
-    """Verify ModelService business rules: model registration, version uniqueness, latest/best lookup."""
-    model_service = ModelService()
+async def test_model_version_service_lifecycle(test_session_factory):
+    """Verify ModelVersionService business rules: model registration, version uniqueness, latest/best lookup, update, delete."""
+    model_service = ModelVersionService()
     now = datetime.now(UTC)
 
     m1 = await model_service.register_model(
@@ -219,21 +219,37 @@ async def test_model_service_lifecycle(test_session_factory):
         trained_at=now,
     )
 
+    # Get model by ID and version
+    got_by_id = await model_service.get_model(model_id=m1.id)
+    assert got_by_id.version == "v1.0.0"
+
+    got_by_ver = await model_service.get_model(version="v2.0.0")
+    assert got_by_ver.id == m2.id
+
+    # Fail fast when no parameters provided
+    with pytest.raises(ValueError, match="Either model_id or version string"):
+        await model_service.get_model()
+
     # Latest model
-    latest = await model_service.get_latest_model()
+    latest = await model_service.latest_model()
     assert latest.id == m2.id
 
     # Best model by metric
-    best_auc = await model_service.get_best_model(metric="auc")
+    best_auc = await model_service.best_model(metric="auc")
     assert best_auc.id == m2.id
 
-    # Get model by version
-    by_version = await model_service.get_model_by_version("v1.0.0")
-    assert by_version.id == m1.id
+    # List all models
+    models_list = await model_service.list_models()
+    assert len(models_list) == 2
 
-    # Non-existent version raises ModelVersionNotFound
-    with pytest.raises(ModelVersionNotFound, match="Model version 'v9.9.9' was not found."):
-        await model_service.get_model_by_version("v9.9.9")
+    # Update model
+    updated = await model_service.update_model(m1.id, artifact_path="/models/v1_updated.pkl")
+    assert updated.artifact_path == "/models/v1_updated.pkl"
+
+    # Delete model
+    assert await model_service.delete_model(m1.id) is True
+    with pytest.raises(ModelVersionNotFound):
+        await model_service.get_model(model_id=m1.id)
 
 
 @pytest.mark.asyncio
@@ -241,7 +257,7 @@ async def test_prediction_service_lifecycle(test_session_factory):
     """Verify PredictionService business rules: prediction creation, duplicate prevention, SHAP explanation creation, snapshot/model validation."""
     repo_service = RepositoryService()
     snap_service = SnapshotService()
-    model_service = ModelService()
+    model_service = ModelVersionService()
     pred_service = PredictionService()
 
     now = datetime.now(UTC)
