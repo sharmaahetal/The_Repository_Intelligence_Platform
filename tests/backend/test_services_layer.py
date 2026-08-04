@@ -13,6 +13,9 @@ from backend.app.services import (
     ModelVersionAlreadyExists,
     ModelVersionNotFound,
     ModelVersionService,
+    PredictionExplanationAlreadyExists,
+    PredictionExplanationNotFound,
+    PredictionExplanationService,
     PredictionNotFound,
     PredictionService,
     RepositoryAlreadyExists,
@@ -366,3 +369,79 @@ async def test_prediction_service_lifecycle(test_session_factory):
     # Delete non-existent raises PredictionNotFound
     with pytest.raises(PredictionNotFound):
         await pred_service.delete_prediction(99999)
+
+
+@pytest.mark.asyncio
+async def test_prediction_explanation_service_lifecycle(test_session_factory):
+    """Verify PredictionExplanationService business rules: creation, single explanation per prediction, update, delete."""
+    repo_service = RepositoryService()
+    snap_service = SnapshotService()
+    model_service = ModelVersionService()
+    pred_service = PredictionService()
+    expl_service = PredictionExplanationService()
+
+    now = datetime.now(UTC)
+    repo = await repo_service.create_repository(
+        owner="fastapi",
+        name="fastapi",
+        full_name="fastapi/fastapi",
+        github_repository_id=5501,
+    )
+    snap = await snap_service.create_snapshot(repository_id=repo.id, snapshot_time=now)
+    model = await model_service.register_model(
+        version="v1.0.0",
+        algorithm="lightgbm",
+        training_dataset_hash="hash_lgb",
+        feature_schema_version="v1",
+        accuracy=0.88,
+        precision=0.85,
+        recall=0.86,
+        f1=0.85,
+        auc=0.91,
+        artifact_path="/models/lgb.pkl",
+    )
+    pred = await pred_service.create_prediction(
+        repository_snapshot_id=snap.id,
+        model_version_id=model.id,
+        predicted_growth=22.0,
+        confidence=0.94,
+    )
+
+    # Create explanation for non-existent prediction raises PredictionNotFound
+    with pytest.raises(PredictionNotFound, match="Prediction '9999' was not found."):
+        await expl_service.create_explanation(prediction_id=9999)
+
+    # Create valid explanation
+    expl = await expl_service.create_explanation(
+        prediction_id=pred.id,
+        summary="High contributor momentum",
+        top_positive_features={"contributors": 0.5},
+        shap_json={"contributors": 0.5},
+    )
+    assert expl.id is not None
+    assert expl.summary == "High contributor momentum"
+
+    # Creating duplicate explanation for same prediction raises PredictionExplanationAlreadyExists
+    with pytest.raises(PredictionExplanationAlreadyExists, match=f"Explanation for prediction '{pred.id}' already exists."):
+        await expl_service.create_explanation(prediction_id=pred.id)
+
+    # Get by explanation ID
+    got_by_id = await expl_service.get_explanation(expl.id)
+    assert got_by_id.id == expl.id
+
+    # Get by prediction ID
+    got_by_pred = await expl_service.get_by_prediction(pred.id)
+    assert got_by_pred.id == expl.id
+
+    # Update explanation
+    updated = await expl_service.update_explanation(expl.id, summary="Updated summary")
+    assert updated.summary == "Updated summary"
+
+    # Delete explanation
+    assert await expl_service.delete_explanation(expl.id) is True
+    with pytest.raises(PredictionExplanationNotFound):
+        await expl_service.get_explanation(expl.id)
+
+    # Delete non-existent raises PredictionExplanationNotFound
+    with pytest.raises(PredictionExplanationNotFound):
+        await expl_service.delete_explanation(99999)

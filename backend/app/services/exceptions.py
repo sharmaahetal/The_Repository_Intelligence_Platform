@@ -114,6 +114,15 @@ class PredictionExplanationNotFound(ServiceError):
         self.prediction_id = prediction_id
 
 
+class PredictionExplanationAlreadyExists(ServiceError):
+    """Raised when attempting to add a duplicate explanation for a prediction."""
+
+    def __init__(self, prediction_id: int) -> None:
+        """Format prediction explanation already exists exception message."""
+        super().__init__(f"Explanation for prediction '{prediction_id}' already exists.")
+        self.prediction_id = prediction_id
+
+
 # Aliases for backward compatibility
 ServiceException = ServiceError
 RepositoryAlreadyExistsError = RepositoryAlreadyExists
@@ -143,4 +152,5 @@ __all__ = [
     "ModelVersionAlreadyExists",
     "InvalidModelVersion",
     "PredictionExplanationNotFound",
+    "PredictionExplanationAlreadyExists",
 ]

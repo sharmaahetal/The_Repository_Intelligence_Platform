@@ -9,6 +9,7 @@ from backend.app.services.exceptions import (
     ModelNotFoundError,
     ModelVersionAlreadyExists,
     ModelVersionNotFound,
+    PredictionExplanationAlreadyExists,
     PredictionExplanationNotFound,
     PredictionNotFound,
     PredictionNotFoundError,
@@ -23,6 +24,9 @@ from backend.app.services.exceptions import (
 )
 from backend.app.services.model_service import ModelService
 from backend.app.services.model_version_service import ModelVersionService
+from backend.app.services.prediction_explanation_service import (
+    PredictionExplanationService,
+)
 from backend.app.services.prediction_service import PredictionService
 from backend.app.services.repository_service import RepositoryService
 from backend.app.services.snapshot_service import (
@@ -50,10 +54,12 @@ __all__ = [
     "ModelVersionAlreadyExists",
     "InvalidModelVersion",
     "PredictionExplanationNotFound",
+    "PredictionExplanationAlreadyExists",
     "RepositoryService",
     "SnapshotService",
     "RepositorySnapshotService",
     "PredictionService",
     "ModelService",
     "ModelVersionService",
+    "PredictionExplanationService",
 ]
