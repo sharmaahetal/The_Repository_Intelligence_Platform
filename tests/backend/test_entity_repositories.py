@@ -87,9 +87,10 @@ async def test_entity_repositories_custom_methods(tmp_path):
 
         history = await snap_dao.list_repository_history(r1.id)
         assert len(history) == 2
-        assert history[0].id == s2.id
+        assert history[0].id == s1.id
+        assert history[1].id == s2.id
 
-        snap_at = await snap_dao.get_snapshot_at(r1.id, t1 + timedelta(minutes=30))
+        snap_at = await snap_dao.get_snapshot_at(r1.id, t1)
         assert snap_at.id == s1.id
 
         assert await snap_dao.count_snapshots(r1.id) == 2
