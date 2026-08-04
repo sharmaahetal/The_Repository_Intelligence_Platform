@@ -30,6 +30,15 @@ class PredictionExplanationService:
         if not await uow.predictions.exists(prediction_id):
             raise PredictionNotFound(prediction_id)
 
+    async def _ensure_explanation_exists(
+        self,
+        uow: UnitOfWork,
+        explanation_id: int,
+    ) -> None:
+        """Validate that target prediction explanation exists in database."""
+        if not await uow.explanations.exists(explanation_id):
+            raise PredictionExplanationNotFound(explanation_id)
+
     async def _ensure_explanation_not_exists(
         self,
         uow: UnitOfWork,
@@ -112,6 +121,8 @@ class PredictionExplanationService:
         """Update an existing prediction explanation entity."""
         uow_context = self.uow if self.uow is not None else UnitOfWork()
         async with uow_context as uow:
+            await self._ensure_explanation_exists(uow, explanation_id)
+
             updated = await uow.explanations.update(explanation_id, attributes)
             if updated is None:
                 raise PredictionExplanationNotFound(explanation_id)
@@ -130,6 +141,8 @@ class PredictionExplanationService:
         """Delete a prediction explanation entity."""
         uow_context = self.uow if self.uow is not None else UnitOfWork()
         async with uow_context as uow:
+            await self._ensure_explanation_exists(uow, explanation_id)
+
             deleted = await uow.explanations.delete(explanation_id)
             if not deleted:
                 raise PredictionExplanationNotFound(explanation_id)
