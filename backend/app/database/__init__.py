@@ -1,3 +1,9 @@
+from backend.app.database.base import (
+    NAMING_CONVENTION,
+    Base,
+    TimestampMixin,
+    metadata,
+)
 from backend.app.database.engine import (
     check_database_connection,
     create_engine,
@@ -14,6 +20,10 @@ from backend.app.database.session import (
 )
 
 __all__ = [
+    "Base",
+    "TimestampMixin",
+    "metadata",
+    "NAMING_CONVENTION",
     "engine",
     "get_engine",
     "create_engine",
