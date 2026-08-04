@@ -167,9 +167,12 @@ async def test_entity_repositories_custom_methods(tmp_path):
             shap_json={"stars_growth": 0.45, "open_issues": -0.05},
         )
 
+        assert (await expl_dao.get_by_prediction(p1.id)).id == e1.id
         assert (await expl_dao.get_for_prediction(p1.id)).id == e1.id
+        assert (await expl_dao.latest()).id == e1.id
+        assert len(await expl_dao.list_all()) == 1
         assert await expl_dao.exists_for_prediction(p1.id) is True
-        assert await expl_dao.delete_for_prediction(p1.id) is True
+        assert await expl_dao.delete_by_prediction(p1.id) is True
         assert await expl_dao.exists_for_prediction(p1.id) is False
 
         # Test SnapshotRepository delete_before
