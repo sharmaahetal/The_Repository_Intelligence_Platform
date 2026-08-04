@@ -46,7 +46,9 @@ class DuplicateSnapshotError(ServiceError):
 
     def __init__(self, repository_id: int, snapshot_time: Any) -> None:
         """Format duplicate snapshot exception message."""
-        super().__init__(f"Snapshot for repository '{repository_id}' at '{snapshot_time}' already exists.")
+        super().__init__(
+            f"Snapshot for repository '{repository_id}' at '{snapshot_time}' already exists."
+        )
         self.repository_id = repository_id
         self.snapshot_time = snapshot_time
 

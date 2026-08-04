@@ -63,7 +63,9 @@ class RepositoryService:
                 fork=fork,
             )
             await uow.commit()
-            logger.info("Repository created", extra={"repository": full_name, "repository_id": repo.id})
+            logger.info(
+                "Repository created", extra={"repository": full_name, "repository_id": repo.id}
+            )
             return repo
 
     async def get_repository(

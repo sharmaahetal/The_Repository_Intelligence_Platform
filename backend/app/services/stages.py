@@ -26,7 +26,9 @@ class SnapshotStage:
     def __init__(self, snapshot_service: RepositorySnapshotService | None = None) -> None:
         self.snapshot_service = snapshot_service or RepositorySnapshotService()
 
-    async def execute(self, context: PredictionContext) -> tuple[RepositorySnapshot, PredictionContext]:
+    async def execute(
+        self, context: PredictionContext
+    ) -> tuple[RepositorySnapshot, PredictionContext]:
         snapshot = await self.snapshot_service.get_snapshot(context.owner, context.repo)
         updated_context = context.model_copy(update={"snapshot_id": snapshot.snapshot_id})
         logger.info(
@@ -62,9 +64,7 @@ class InferenceStage:
     def __init__(self, inference_service: InferenceService | None = None) -> None:
         self.inference_service = inference_service or InferenceService()
 
-    async def execute(
-        self, repo_features: RepositoryFeatures, context: PredictionContext
-    ) -> Any:
+    async def execute(self, repo_features: RepositoryFeatures, context: PredictionContext) -> Any:
         engine = self.inference_service.get_engine(version=context.model_version)
         # Offload CPU-bound ML prediction to worker thread
         prediction = await asyncio.to_thread(
@@ -115,9 +115,7 @@ class ExplainabilityStage:
                 ds,
             )
 
-        narrative = self.narrative_synthesizer.synthesize(
-            context.owner, context.repo, prediction
-        )
+        narrative = self.narrative_synthesizer.synthesize(context.owner, context.repo, prediction)
 
         top_factors = [
             TopFactor(
@@ -137,7 +135,9 @@ class ExplainabilityStage:
             ),
         ]
 
-        logger.info("ExplainabilityStage executed successfully", extra={"request_id": context.request_id})
+        logger.info(
+            "ExplainabilityStage executed successfully", extra={"request_id": context.request_id}
+        )
         return shap_summary, narrative, top_factors
 
 

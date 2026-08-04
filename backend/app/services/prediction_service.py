@@ -53,7 +53,10 @@ class PredictionService:
         """Validate that no identical prediction exists for snapshot, model version, and horizon."""
         existing = await uow.predictions.list_predictions(repository_snapshot_id)
         for p in existing:
-            if p.model_version_id == model_version_id and p.prediction_horizon_days == prediction_horizon_days:
+            if (
+                p.model_version_id == model_version_id
+                and p.prediction_horizon_days == prediction_horizon_days
+            ):
                 raise DuplicatePredictionError(
                     f"snapshot={repository_snapshot_id}, model={model_version_id}, horizon={prediction_horizon_days}"
                 )

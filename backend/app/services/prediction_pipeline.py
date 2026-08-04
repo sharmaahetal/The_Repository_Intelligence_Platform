@@ -96,7 +96,8 @@ class PredictionPipeline:
             repo=repo,
             horizon=horizon,
             model_version=model_version,
-            request_id=request_id or f"req_{hashlib.md5(f'{owner}/{repo}'.encode()).hexdigest()[:8]}",
+            request_id=request_id
+            or f"req_{hashlib.md5(f'{owner}/{repo}'.encode()).hexdigest()[:8]}",
         )
 
         logger.info(
