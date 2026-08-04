@@ -39,8 +39,6 @@ class AppSettings(BaseModel):
         default=False,
         description="Enable debug mode and detailed tracebacks.",
     )
-
-
 class DatabaseSettings(BaseModel):
     """Relational database connection pool and engine configuration."""
 
@@ -48,6 +46,7 @@ class DatabaseSettings(BaseModel):
         ...,
         description="Async PostgreSQL database connection string URL. Required.",
     )
+
     pool_size: int = Field(
         default=5,
         description="Connection pool size limit.",
@@ -72,7 +71,6 @@ class DatabaseSettings(BaseModel):
         default=False,
         description="Enable SQL engine statement query logging.",
     )
-
 
 
 class GitHubSettings(BaseModel):
@@ -154,6 +152,7 @@ class Settings(BaseSettings):
     model: ModelSettings = Field(default_factory=ModelSettings)
 
     model_config = SettingsConfigDict(
+
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
