@@ -113,7 +113,7 @@ class BaseRepository(Generic[T]):
         statement = delete(self.model).where(self.model.id == entity_id)  # type: ignore[attr-defined]
         result = await self.session.execute(statement)
         await self.session.flush()
-        deleted = (result.rowcount or 0) > 0
+        deleted = (getattr(result, "rowcount", 0) or 0) > 0
         if deleted:
             logger.info(
                 "Deleted entity",
