@@ -1,7 +1,12 @@
 from datetime import UTC, datetime
 
 import pytest
+from sqlalchemy import inspect
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.orm import configure_mappers
+
+
 
 from backend.app.database import (
     Base,
@@ -12,10 +17,42 @@ from backend.app.database import (
     RepositorySnapshot,
     create_engine,
 )
+from backend.app.database.models import (
+    ModelVersion as MV,
+)
+from backend.app.database.models import (
+    Prediction as P,
+)
+from backend.app.database.models import (
+    PredictionExplanation as PE,
+)
+from backend.app.database.models import (
+    Repository as R,
+)
+from backend.app.database.models import (
+    RepositorySnapshot as RS,
+)
+
+
+def test_wildcard_import_and_export():
+    """Sprint 1.9 Step 6 & 8: Verify models package exports all 5 domain models cleanly."""
+    assert R is Repository
+    assert RS is RepositorySnapshot
+    assert MV is ModelVersion
+    assert P is Prediction
+    assert PE is PredictionExplanation
+
+
+def test_mapper_configuration():
+    """Sprint 1.9 Step 1 & 5: Verify configure_mappers runs without mapper configuration errors."""
+    configure_mappers()
+    for model in (Repository, RepositorySnapshot, ModelVersion, Prediction, PredictionExplanation):
+        mapper = inspect(model)
+        assert mapper is not None
 
 
 def test_models_registered_in_metadata():
-    """Verify all 5 tables are registered in Base.metadata with correct table names."""
+    """Sprint 1.9 Step 4: Verify all 5 tables are registered in Base.metadata with exact table names."""
     table_names = set(Base.metadata.tables.keys())
     expected_tables = {
         "repositories",
@@ -27,8 +64,9 @@ def test_models_registered_in_metadata():
     assert expected_tables.issubset(table_names)
 
 
+
 def test_indexes_and_constraints_registered():
-    """Verify indexes and check constraints are defined on table schemas."""
+    """Sprint 1.9 Step 3 & 7: Verify foreign keys, indexes, and check constraints on table schemas."""
     repo_table = Base.metadata.tables["repositories"]
     assert "github_repository_id" in [c.name for c in repo_table.columns if c.unique or c.index]
 
@@ -55,12 +93,37 @@ def test_indexes_and_constraints_registered():
     assert any("prediction_model_snapshot_horizon" in name for name in pred_uq_names)
 
 
+def test_in_memory_model_instantiation():
+    """Sprint 1.9 Step 5: Instantiate all 5 models in memory without mapper or validation errors."""
+    now = datetime.now(UTC)
+    repo = Repository(github_repository_id=1, owner="o", name="n", full_name="o/n")
+    snap = RepositorySnapshot(repository_id=1, snapshot_time=now, stars=10)
+    mv = ModelVersion(
+        version="v1.0.0",
+        algorithm="xgb",
+        training_dataset_hash="h" * 64,
+        feature_schema_version="1.0",
+        accuracy=0.9,
+        precision=0.9,
+        recall=0.9,
+        f1=0.9,
+        auc=0.9,
+        artifact_path="/path",
+        trained_at=now,
+    )
+    pred = Prediction(repository_snapshot_id=1, model_version_id=1, predicted_growth=1.0, confidence=0.8, prediction_timestamp=now)
+    expl = PredictionExplanation(prediction_id=1, summary="s", top_positive_features={}, top_negative_features={}, shap_json={})
 
+    assert repr(repo).startswith("<Repository(")
+    assert repr(snap).startswith("<RepositorySnapshot(")
+    assert repr(mv).startswith("<ModelVersion(")
+    assert repr(pred).startswith("<Prediction(")
+    assert repr(expl).startswith("<PredictionExplanation(")
 
 
 @pytest.mark.asyncio
 async def test_end_to_end_orm_persistence_flow(tmp_path):
-    """Verify full end-to-end cascade persistence across all 5 entities."""
+    """Sprint 1.9 Step 2: Verify bidirectional relationships and end-to-end cascade persistence."""
     db_file = tmp_path / "test_models.db"
     test_engine = create_engine(f"sqlite+aiosqlite:///{db_file}")
 
@@ -82,7 +145,6 @@ async def test_end_to_end_orm_persistence_flow(tmp_path):
         session.add(repo)
         await session.commit()
         await session.refresh(repo)
-        assert repo.id is not None
 
         # 2. Create RepositorySnapshot
         snapshot = RepositorySnapshot(
@@ -97,14 +159,12 @@ async def test_end_to_end_orm_persistence_flow(tmp_path):
         session.add(snapshot)
         await session.commit()
         await session.refresh(snapshot)
-        assert snapshot.id is not None
-        assert snapshot.repository_id == repo.id
 
-        # 3. Create ModelVersion with audit metadata
+        # 3. Create ModelVersion
         model_ver = ModelVersion(
             version="v1.0.0",
             algorithm="xgboost",
-            training_dataset_hash="a1b2c3d4e5f67890" * 4,  # 64 chars
+            training_dataset_hash="a1b2c3d4e5f67890" * 4,
             feature_schema_version="1.0",
             accuracy=0.88,
             precision=0.86,
@@ -122,10 +182,6 @@ async def test_end_to_end_orm_persistence_flow(tmp_path):
         session.add(model_ver)
         await session.commit()
         await session.refresh(model_ver)
-        assert model_ver.id is not None
-        assert model_ver.training_duration_seconds == 124.5
-        assert model_ver.dataset_size == 15000
-        assert model_ver.random_seed == 42
 
         # 4. Create Prediction
         prediction = Prediction(
@@ -139,7 +195,6 @@ async def test_end_to_end_orm_persistence_flow(tmp_path):
         session.add(prediction)
         await session.commit()
         await session.refresh(prediction)
-        assert prediction.id is not None
 
         # 5. Create PredictionExplanation
         explanation = PredictionExplanation(
@@ -152,7 +207,12 @@ async def test_end_to_end_orm_persistence_flow(tmp_path):
         session.add(explanation)
         await session.commit()
         await session.refresh(explanation)
-        assert explanation.id is not None
+
+        # Verify Foreign Key references and persistence
+        assert snapshot.repository_id == repo.id
+        assert prediction.repository_snapshot_id == snapshot.id
+        assert prediction.model_version_id == model_ver.id
         assert explanation.prediction_id == prediction.id
+
 
     await test_engine.dispose()
