@@ -1,20 +1,19 @@
 """SQLAlchemy 2.0 Declarative Base and metadata configuration for Repository Intelligence Platform.
 
 Provides a shared MetaData instance with deterministic naming conventions,
-a modern DeclarativeBase root class, and a reusable TimestampMixin audit helper.
+a modern DeclarativeBase root class with concise repr, and a reusable TimestampMixin audit helper.
 """
 
 from datetime import UTC, datetime
-from typing import Any
 
-from sqlalchemy import DateTime, MetaData
+from sqlalchemy import DateTime, MetaData, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # ============================================================================
 # Step 2 — MetaData Naming Conventions for Deterministic Alembic Migrations
 # ============================================================================
 
-NAMING_CONVENTION: dict[str, str] = {
+POSTGRES_NAMING_CONVENTION: dict[str, str] = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
     "ck": "ck_%(table_name)s_%(constraint_name)s",
@@ -22,7 +21,11 @@ NAMING_CONVENTION: dict[str, str] = {
     "pk": "pk_%(table_name)s",
 }
 
-metadata = MetaData(naming_convention=NAMING_CONVENTION)
+ORM_METADATA: MetaData = MetaData(naming_convention=POSTGRES_NAMING_CONVENTION)
+
+# Backwards compatibility aliases
+metadata: MetaData = ORM_METADATA
+NAMING_CONVENTION: dict[str, str] = POSTGRES_NAMING_CONVENTION
 
 
 # ============================================================================
@@ -32,14 +35,14 @@ metadata = MetaData(naming_convention=NAMING_CONVENTION)
 class Base(DeclarativeBase):
     """Declarative Base class for all ORM models."""
 
-    metadata = metadata
+    metadata = ORM_METADATA
 
     def __repr__(self) -> str:
-        fields = ", ".join(
-            f"{col.name}={repr(getattr(self, col.name, None))}"
-            for col in self.__table__.columns
-        )
-        return f"<{self.__class__.__name__}({fields})>"
+        """Concise string representation displaying primary key or class name."""
+        pk_val = getattr(self, "id", None)
+        if pk_val is not None:
+            return f"<{self.__class__.__name__}(id={pk_val!r})>"
+        return f"<{self.__class__.__name__}()>"
 
 
 # ============================================================================
@@ -47,16 +50,21 @@ class Base(DeclarativeBase):
 # ============================================================================
 
 class TimestampMixin:
-    """Audit mixin providing created_at and updated_at timezone-aware timestamps."""
+    """Abstract audit mixin providing created_at and updated_at timezone-aware timestamps.
+
+    Intended for inheritance alongside Base by domain ORM models.
+    """
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
+        server_default=func.now(),
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
+        server_default=func.now(),
         nullable=False,
     )

@@ -1,5 +1,7 @@
 from backend.app.database.base import (
     NAMING_CONVENTION,
+    ORM_METADATA,
+    POSTGRES_NAMING_CONVENTION,
     Base,
     TimestampMixin,
     metadata,
@@ -22,6 +24,8 @@ from backend.app.database.session import (
 __all__ = [
     "Base",
     "TimestampMixin",
+    "ORM_METADATA",
+    "POSTGRES_NAMING_CONVENTION",
     "metadata",
     "NAMING_CONVENTION",
     "engine",
