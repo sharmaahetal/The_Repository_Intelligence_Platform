@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import AliasChoices, Field
 
@@ -15,17 +16,18 @@ class RepositorySnapshotCreate(BaseSchema):
     repository_id: int
     snapshot_time: datetime
 
-    stars: int
-    forks: int
-    watchers: int
-    open_issues: int
+    stars: int = 0
+    forks: int = 0
+    watchers: int = 0
+    open_issues: int = 0
 
-    subscribers: int
-    network_count: int
-    size_kb: int
+    subscribers: int = 0
+    network_count: int = 0
+    size_kb: int = 0
 
-    primary_language: str | None = None
-    license_name: str | None = Field(default=None, validation_alias=AliasChoices("license_name", "license"))
+    license: str | None = Field(default=None, validation_alias=AliasChoices("license", "license_name"))
+    topics_json: dict[str, Any] | list[str] | None = None
+    default_branch: str = "main"
 
 
 class RepositorySnapshotUpdate(BaseSchema):
@@ -40,8 +42,9 @@ class RepositorySnapshotUpdate(BaseSchema):
     network_count: int | None = None
     size_kb: int | None = None
 
-    primary_language: str | None = None
-    license_name: str | None = Field(default=None, validation_alias=AliasChoices("license_name", "license"))
+    license: str | None = Field(default=None, validation_alias=AliasChoices("license", "license_name"))
+    topics_json: dict[str, Any] | list[str] | None = None
+    default_branch: str | None = None
 
 
 class RepositorySnapshotResponse(BaseSchema):
@@ -60,8 +63,10 @@ class RepositorySnapshotResponse(BaseSchema):
     network_count: int
     size_kb: int
 
-    primary_language: str | None = None
-    license_name: str | None = Field(default=None, validation_alias=AliasChoices("license_name", "license"))
+    license: str | None = Field(default=None, validation_alias=AliasChoices("license", "license_name"))
+    topics_json: dict[str, Any] | list[str] | None = None
+    default_branch: str = "main"
 
+    collected_at: datetime
     created_at: datetime
     updated_at: datetime

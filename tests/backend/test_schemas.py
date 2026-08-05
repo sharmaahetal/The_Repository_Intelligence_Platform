@@ -89,7 +89,7 @@ def test_repository_snapshot_schemas():
         subscribers=15,
         network_count=20,
         size_kb=1024,
-        license_name="MIT",
+        license="MIT",
     )
     assert create_dto.stars == 100
     assert create_dto.repository_id == 1
@@ -110,6 +110,8 @@ def test_repository_snapshot_schemas():
         network_count=20,
         size_kb=1024,
         license="MIT",
+        default_branch="main",
+        collected_at=now,
         created_at=now,
         updated_at=now,
     )
@@ -117,3 +119,4 @@ def test_repository_snapshot_schemas():
     response_dto = RepositorySnapshotResponse.model_validate(snap_orm)
     assert response_dto.id == 10
     assert response_dto.stars == 100
+    assert response_dto.license == "MIT"
