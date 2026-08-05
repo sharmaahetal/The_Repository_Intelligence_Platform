@@ -3,10 +3,14 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from backend.app.database.models.prediction import Prediction
 from backend.app.database.models.repository import Repository
 from backend.app.database.models.snapshot import RepositorySnapshot
 from backend.app.schemas import (
     BaseSchema,
+    PredictionCreate,
+    PredictionResponse,
+    PredictionUpdate,
     RepositoryCreate,
     RepositoryResponse,
     RepositorySearch,
@@ -120,3 +124,39 @@ def test_repository_snapshot_schemas():
     assert response_dto.id == 10
     assert response_dto.stars == 100
     assert response_dto.license == "MIT"
+
+
+def test_prediction_schemas():
+    """Verify Prediction DTO schemas instantiation, defaults, and ORM conversion."""
+    now = datetime.now(UTC)
+    create_dto = PredictionCreate(
+        repository_snapshot_id=10,
+        model_version_id=2,
+        predicted_growth=15.5,
+        confidence=0.92,
+        prediction_timestamp=now,
+    )
+    assert create_dto.repository_snapshot_id == 10
+    assert create_dto.model_version_id == 2
+    assert create_dto.prediction_horizon_days == 30
+
+    update_dto = PredictionUpdate(confidence=0.95)
+    assert update_dto.confidence == 0.95
+    assert update_dto.predicted_growth is None
+
+    pred_orm = Prediction(
+        id=100,
+        repository_snapshot_id=10,
+        model_version_id=2,
+        predicted_growth=15.5,
+        confidence=0.92,
+        prediction_timestamp=now,
+        prediction_horizon_days=30,
+        created_at=now,
+        updated_at=now,
+    )
+
+    response_dto = PredictionResponse.model_validate(pred_orm)
+    assert response_dto.id == 100
+    assert response_dto.predicted_growth == 15.5
+    assert response_dto.confidence == 0.92
