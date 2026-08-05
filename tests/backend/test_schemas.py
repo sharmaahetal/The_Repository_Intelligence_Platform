@@ -3,11 +3,15 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from backend.app.database.models.model_version import ModelVersion
 from backend.app.database.models.prediction import Prediction
 from backend.app.database.models.repository import Repository
 from backend.app.database.models.snapshot import RepositorySnapshot
 from backend.app.schemas import (
     BaseSchema,
+    ModelVersionCreate,
+    ModelVersionResponse,
+    ModelVersionUpdate,
     PredictionCreate,
     PredictionResponse,
     PredictionUpdate,
@@ -160,3 +164,51 @@ def test_prediction_schemas():
     assert response_dto.id == 100
     assert response_dto.predicted_growth == 15.5
     assert response_dto.confidence == 0.92
+
+
+def test_model_version_schemas():
+    """Verify ModelVersion DTO schemas instantiation, defaults, and ORM conversion."""
+    now = datetime.now(UTC)
+    create_dto = ModelVersionCreate(
+        version="v1.0.0",
+        algorithm="xgboost",
+        training_dataset_hash="hash123",
+        feature_schema_version="v1",
+        accuracy=0.88,
+        precision=0.87,
+        recall=0.89,
+        f1=0.88,
+        auc=0.91,
+        artifact_path="/models/v1.0.0.pkl",
+        trained_at=now,
+    )
+    assert create_dto.version == "v1.0.0"
+    assert create_dto.algorithm == "xgboost"
+    assert create_dto.f1 == 0.88
+
+    update_dto = ModelVersionUpdate(accuracy=0.90)
+    assert update_dto.accuracy == 0.90
+    assert update_dto.version is None
+
+    model_orm = ModelVersion(
+        id=5,
+        version="v1.0.0",
+        algorithm="xgboost",
+        training_dataset_hash="hash123",
+        feature_schema_version="v1",
+        accuracy=0.88,
+        precision=0.87,
+        recall=0.89,
+        f1=0.88,
+        auc=0.91,
+        artifact_path="/models/v1.0.0.pkl",
+        trained_at=now,
+        training_duration_seconds=12.5,
+        created_at=now,
+        updated_at=now,
+    )
+
+    response_dto = ModelVersionResponse.model_validate(model_orm)
+    assert response_dto.id == 5
+    assert response_dto.version == "v1.0.0"
+    assert response_dto.training_duration_seconds == 12.5

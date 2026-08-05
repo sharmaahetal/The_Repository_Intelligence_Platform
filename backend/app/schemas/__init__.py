@@ -1,6 +1,11 @@
 """Public schema exports."""
 
 from backend.app.schemas.base import BaseSchema
+from backend.app.schemas.model_version import (
+    ModelVersionCreate,
+    ModelVersionResponse,
+    ModelVersionUpdate,
+)
 from backend.app.schemas.prediction import (
     PredictionCreate,
     PredictionResponse,
@@ -30,4 +35,7 @@ __all__ = [
     "PredictionCreate",
     "PredictionUpdate",
     "PredictionResponse",
+    "ModelVersionCreate",
+    "ModelVersionUpdate",
+    "ModelVersionResponse",
 ]
