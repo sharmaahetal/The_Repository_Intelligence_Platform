@@ -6,6 +6,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.app.logging import bind_contextvars
+from backend.app.logging.middleware import TelemetryMiddleware
 
 
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):
@@ -40,3 +41,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         return response
+
+
+__all__ = [
+    "StructuredLoggingMiddleware",
+    "SecurityHeadersMiddleware",
+    "TelemetryMiddleware",
+]

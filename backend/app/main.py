@@ -7,10 +7,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.exceptions import register_exception_handlers
-from backend.app.api.middleware import SecurityHeadersMiddleware, StructuredLoggingMiddleware
+from backend.app.api.middleware import (
+    SecurityHeadersMiddleware,
+    StructuredLoggingMiddleware,
+    TelemetryMiddleware,
+)
 from backend.app.api.routers import api_v1_router
 from backend.app.config import settings
-from backend.app.logging import TelemetryMiddleware, logger
+from backend.app.logging import logger
 
 
 def _get_git_commit() -> str:

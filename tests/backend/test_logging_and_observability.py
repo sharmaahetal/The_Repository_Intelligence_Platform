@@ -6,8 +6,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from backend.app.api.exceptions import PredictionError, register_exception_handlers
+from backend.app.api.middleware import TelemetryMiddleware
 from backend.app.logging import (
-    TelemetryMiddleware,
     bind_contextvars,
     clear_request_context,
     get_request_context,

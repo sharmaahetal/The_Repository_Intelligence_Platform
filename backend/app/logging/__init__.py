@@ -8,7 +8,6 @@ from backend.app.logging.context import (
 )
 from backend.app.logging.formatter import redact_sensitive_data
 from backend.app.logging.logger import log_duration, log_execution_time, logger, setup_logger
-from backend.app.logging.middleware import TelemetryMiddleware
 
 __all__ = [
     "logger",
@@ -22,5 +21,4 @@ __all__ = [
     "log_execution_time",
     "log_duration",
     "redact_sensitive_data",
-    "TelemetryMiddleware",
 ]
