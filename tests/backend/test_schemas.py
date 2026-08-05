@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from backend.app.database.models.explanation import PredictionExplanation
 from backend.app.database.models.model_version import ModelVersion
 from backend.app.database.models.prediction import Prediction
 from backend.app.database.models.repository import Repository
@@ -13,6 +14,9 @@ from backend.app.schemas import (
     ModelVersionResponse,
     ModelVersionUpdate,
     PredictionCreate,
+    PredictionExplanationCreate,
+    PredictionExplanationResponse,
+    PredictionExplanationUpdate,
     PredictionResponse,
     PredictionUpdate,
     RepositoryCreate,
@@ -212,3 +216,38 @@ def test_model_version_schemas():
     assert response_dto.id == 5
     assert response_dto.version == "v1.0.0"
     assert response_dto.training_duration_seconds == 12.5
+
+
+def test_prediction_explanation_schemas():
+    """Verify PredictionExplanation DTO schemas instantiation and ORM conversion."""
+    now = datetime.now(UTC)
+    create_dto = PredictionExplanationCreate(
+        prediction_id=100,
+        summary="Recent increase in star velocity driving growth.",
+        top_positive_features={"star_growth_30d": 0.85},
+        top_negative_features={"open_issue_ratio": -0.12},
+        shap_json={"star_growth_30d": 0.85, "open_issue_ratio": -0.12},
+    )
+    assert create_dto.prediction_id == 100
+    assert create_dto.summary == "Recent increase in star velocity driving growth."
+
+    update_dto = PredictionExplanationUpdate(summary="Updated summary.")
+    assert update_dto.summary == "Updated summary."
+    assert update_dto.top_positive_features is None
+
+    exp_orm = PredictionExplanation(
+        id=50,
+        prediction_id=100,
+        summary="Recent increase in star velocity driving growth.",
+        top_positive_features={"star_growth_30d": 0.85},
+        top_negative_features={"open_issue_ratio": -0.12},
+        shap_json={"star_growth_30d": 0.85, "open_issue_ratio": -0.12},
+        generated_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+
+    response_dto = PredictionExplanationResponse.model_validate(exp_orm)
+    assert response_dto.id == 50
+    assert response_dto.prediction_id == 100
+    assert response_dto.top_positive_features == {"star_growth_30d": 0.85}
