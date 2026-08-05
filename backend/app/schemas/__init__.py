@@ -7,6 +7,11 @@ from backend.app.schemas.repository import (
     RepositorySearch,
     RepositoryUpdate,
 )
+from backend.app.schemas.snapshot import (
+    RepositorySnapshotCreate,
+    RepositorySnapshotResponse,
+    RepositorySnapshotUpdate,
+)
 
 __all__ = [
     "BaseSchema",
@@ -14,4 +19,7 @@ __all__ = [
     "RepositoryUpdate",
     "RepositoryResponse",
     "RepositorySearch",
+    "RepositorySnapshotCreate",
+    "RepositorySnapshotUpdate",
+    "RepositorySnapshotResponse",
 ]

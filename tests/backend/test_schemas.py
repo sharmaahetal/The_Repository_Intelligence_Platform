@@ -4,11 +4,15 @@ import pytest
 from pydantic import ValidationError
 
 from backend.app.database.models.repository import Repository
+from backend.app.database.models.snapshot import RepositorySnapshot
 from backend.app.schemas import (
     BaseSchema,
     RepositoryCreate,
     RepositoryResponse,
     RepositorySearch,
+    RepositorySnapshotCreate,
+    RepositorySnapshotResponse,
+    RepositorySnapshotUpdate,
     RepositoryUpdate,
 )
 
@@ -70,3 +74,46 @@ def test_repository_schemas():
     assert response_dto.id == 1
     assert response_dto.full_name == "octocat/Hello-World"
     assert response_dto.created_at == now
+
+
+def test_repository_snapshot_schemas():
+    """Verify RepositorySnapshot DTO schemas instantiation and ORM validation."""
+    now = datetime.now(UTC)
+    create_dto = RepositorySnapshotCreate(
+        repository_id=1,
+        snapshot_time=now,
+        stars=100,
+        forks=20,
+        watchers=100,
+        open_issues=5,
+        subscribers=15,
+        network_count=20,
+        size_kb=1024,
+        license_name="MIT",
+    )
+    assert create_dto.stars == 100
+    assert create_dto.repository_id == 1
+
+    update_dto = RepositorySnapshotUpdate(stars=120)
+    assert update_dto.stars == 120
+    assert update_dto.forks is None
+
+    snap_orm = RepositorySnapshot(
+        id=10,
+        repository_id=1,
+        snapshot_time=now,
+        stars=100,
+        forks=20,
+        watchers=100,
+        open_issues=5,
+        subscribers=15,
+        network_count=20,
+        size_kb=1024,
+        license="MIT",
+        created_at=now,
+        updated_at=now,
+    )
+
+    response_dto = RepositorySnapshotResponse.model_validate(snap_orm)
+    assert response_dto.id == 10
+    assert response_dto.stars == 100
