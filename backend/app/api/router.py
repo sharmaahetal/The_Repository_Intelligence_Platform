@@ -8,10 +8,10 @@ from backend.app.api.predictions import router as predictions_router
 from backend.app.api.repositories import router as repositories_router
 from backend.app.api.snapshots import router as snapshots_router
 
-api_router = APIRouter()
+router = APIRouter()
 
-api_router.include_router(repositories_router)
-api_router.include_router(snapshots_router)
-api_router.include_router(predictions_router)
-api_router.include_router(explanations_router)
-api_router.include_router(model_versions_router)
+router.include_router(repositories_router)
+router.include_router(snapshots_router)
+router.include_router(predictions_router)
+router.include_router(explanations_router)
+router.include_router(model_versions_router)

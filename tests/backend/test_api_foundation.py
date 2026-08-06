@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 
-from backend.app.api import api_router
 from backend.app.api.deps import (
     get_model_version_service,
     get_prediction_explanation_service,
@@ -8,6 +7,7 @@ from backend.app.api.deps import (
     get_repository_service,
     get_snapshot_service,
 )
+from backend.app.api.router import router
 from backend.app.services.model_version_service import ModelVersionService
 from backend.app.services.prediction_explanation_service import (
     PredictionExplanationService,
@@ -18,10 +18,10 @@ from backend.app.services.snapshot_service import SnapshotService
 
 
 def test_api_router_structure():
-    """Verify api_router includes all 5 feature routers with correct prefixes and tags."""
-    assert isinstance(api_router, APIRouter)
+    """Verify router includes all 5 feature routers with correct prefixes and tags."""
+    assert isinstance(router, APIRouter)
     # 5 feature sub-routers included
-    assert len(api_router.routes) == 5
+    assert len(router.routes) == 5
 
 
 def test_api_deps_providers():
