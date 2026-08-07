@@ -87,6 +87,41 @@ class SnapshotService:
             )
             return snapshot
 
+    async def get_snapshot_by_id(self, snapshot_id: int) -> RepositorySnapshot:
+        """Retrieve a snapshot entity by its primary key ID."""
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
+            snapshot = await uow.snapshots.get_by_id(snapshot_id)
+            if snapshot is None:
+                raise SnapshotNotFound(snapshot_id)
+            return snapshot
+
+    async def update_snapshot(
+        self,
+        snapshot_id: int,
+        **attributes: Any,
+    ) -> RepositorySnapshot:
+        """Update attributes of an existing snapshot entity."""
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
+            updated = await uow.snapshots.update(snapshot_id, attributes)
+            if updated is None:
+                raise SnapshotNotFound(snapshot_id)
+            await uow.commit()
+            logger.info("Snapshot updated", extra={"snapshot_id": snapshot_id})
+            return updated
+
+    async def delete_snapshot(self, snapshot_id: int) -> bool:
+        """Delete a snapshot entity by its primary key ID."""
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
+            deleted = await uow.snapshots.delete(snapshot_id)
+            if not deleted:
+                raise SnapshotNotFound(snapshot_id)
+            await uow.commit()
+            logger.info("Snapshot deleted", extra={"snapshot_id": snapshot_id})
+            return True
+
     async def latest_snapshot(self, repository_id: int) -> RepositorySnapshot:
         """Retrieve the newest snapshot for a given repository."""
         uow_context = self.uow if self.uow is not None else UnitOfWork()

@@ -2,14 +2,16 @@
 
 from fastapi import APIRouter, Depends, status
 
-from backend.app.api.deps import get_repository_service
+from backend.app.api.deps import get_repository_service, get_snapshot_service
 from backend.app.schemas import (
     RepositoryCreate,
     RepositoryResponse,
     RepositorySearch,
+    RepositorySnapshotResponse,
     RepositoryUpdate,
 )
 from backend.app.services.repository_service import RepositoryService
+from backend.app.services.snapshot_service import SnapshotService
 
 router = APIRouter(prefix="/repositories", tags=["Repositories"])
 
@@ -102,3 +104,19 @@ async def search_repositories(
         archived=search_params.archived,
     )
     return [RepositoryResponse.model_validate(r) for r in repos]
+
+
+@router.get(
+    "/{repository_id}/snapshots",
+    response_model=list[RepositorySnapshotResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get snapshot history for a repository",
+    tags=["Snapshots"],
+)
+async def get_repository_snapshots(
+    repository_id: int,
+    snapshot_service: SnapshotService = Depends(get_snapshot_service),
+) -> list[RepositorySnapshotResponse]:
+    """Retrieve chronological snapshot history for a given repository."""
+    history = await snapshot_service.snapshot_history(repository_id)
+    return [RepositorySnapshotResponse.model_validate(s) for s in history]
