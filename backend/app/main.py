@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.api.exceptions import register_exception_handlers
+from backend.app.api.exception_handlers import register_exception_handlers
 from backend.app.api.middleware import (
     SecurityHeadersMiddleware,
     StructuredLoggingMiddleware,

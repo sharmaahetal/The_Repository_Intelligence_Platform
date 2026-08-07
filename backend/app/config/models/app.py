@@ -15,7 +15,7 @@ class Environment(StrEnum):
 class AppConfig(BaseAppSettings):
     environment: Environment = Environment.DEVELOPMENT
     debug: bool = True
-    app_name: str = "Repository Intelligence Platform API"
+    app_name: str = "Repository Intelligence Platform"
     api_v1_prefix: str = "/api/v1"
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 
