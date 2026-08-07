@@ -2,11 +2,18 @@
 
 from fastapi import APIRouter, Depends, status
 
-from backend.app.api.deps import get_prediction_service
+from backend.app.api.deps import (
+    get_prediction_explanation_service,
+    get_prediction_service,
+)
 from backend.app.schemas import (
     PredictionCreate,
+    PredictionExplanationResponse,
     PredictionResponse,
     PredictionUpdate,
+)
+from backend.app.services.prediction_explanation_service import (
+    PredictionExplanationService,
 )
 from backend.app.services.prediction_service import PredictionService
 
@@ -33,6 +40,39 @@ async def create_prediction(
         prediction_timestamp=payload.prediction_timestamp,
     )
     return PredictionResponse.model_validate(prediction)
+
+
+@router.get(
+    "/snapshot/{snapshot_id}",
+    response_model=list[PredictionResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List predictions for a snapshot",
+)
+async def snapshot_predictions(
+    snapshot_id: int,
+    service: PredictionService = Depends(get_prediction_service),
+) -> list[PredictionResponse]:
+    """Retrieve all predictions recorded for a repository snapshot."""
+    predictions = await service.list_predictions_for_snapshot(snapshot_id)
+    return [PredictionResponse.model_validate(p) for p in predictions]
+
+
+@router.get(
+    "/{prediction_id}/explanation",
+    response_model=PredictionExplanationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get explanation for a prediction",
+    tags=["Explanations"],
+)
+async def get_prediction_explanation(
+    prediction_id: int,
+    explanation_service: PredictionExplanationService = Depends(
+        get_prediction_explanation_service
+    ),
+) -> PredictionExplanationResponse:
+    """Retrieve SHAP explanation associated with a specific prediction."""
+    explanation = await explanation_service.get_by_prediction(prediction_id)
+    return PredictionExplanationResponse.model_validate(explanation)
 
 
 @router.get(
@@ -78,18 +118,3 @@ async def delete_prediction(
 ) -> None:
     """Delete a prediction entity by ID."""
     await service.delete_prediction(prediction_id)
-
-
-@router.get(
-    "/snapshot/{snapshot_id}",
-    response_model=list[PredictionResponse],
-    status_code=status.HTTP_200_OK,
-    summary="List predictions for a snapshot",
-)
-async def snapshot_predictions(
-    snapshot_id: int,
-    service: PredictionService = Depends(get_prediction_service),
-) -> list[PredictionResponse]:
-    """Retrieve all predictions recorded for a repository snapshot."""
-    predictions = await service.list_predictions_for_snapshot(snapshot_id)
-    return [PredictionResponse.model_validate(p) for p in predictions]

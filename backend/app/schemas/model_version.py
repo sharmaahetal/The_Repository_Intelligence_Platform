@@ -20,7 +20,7 @@ class ModelVersionCreate(BaseSchema):
     f1: float
     auc: float
     artifact_path: str
-    trained_at: datetime
+    trained_at: datetime | None = None
     training_duration_seconds: float | None = None
     cross_validation_score: float | None = None
     dataset_size: int | None = None
