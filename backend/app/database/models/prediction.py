@@ -4,7 +4,7 @@ Tracks ML inference output predictions linked to repository snapshots and model 
 """
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,9 +12,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.database.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
-    from backend.app.database.models.explanation import PredictionExplanation
-    from backend.app.database.models.model_version import ModelVersion
     from backend.app.database.models.snapshot import RepositorySnapshot
+    ModelVersion = Any
+    PredictionExplanation = Any
 
 
 class Prediction(Base, TimestampMixin):

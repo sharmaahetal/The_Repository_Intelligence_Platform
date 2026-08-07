@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Any, cast
 
 import numpy as np
 
@@ -76,7 +77,7 @@ class DriftDetector:
         try:
             from scipy.stats import ks_2samp  # type: ignore
 
-            ks_res = ks_2samp(base_arr, curr_arr)
+            ks_res = cast(Any, ks_2samp(base_arr, curr_arr))
             ks_stat = round(float(ks_res.statistic), 4)
             ks_p = round(float(ks_res.pvalue), 4)
         except Exception:

@@ -12,8 +12,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.database.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
-    from backend.app.database.models.prediction import Prediction
-    from backend.app.database.models.repository import Repository
+    Prediction = Any
+    Repository = Any
 
 
 class RepositorySnapshot(Base, TimestampMixin):

@@ -68,7 +68,7 @@ class BaseRepository(Generic[T]):
 
     async def get_by_id(self, entity_id: int) -> T | None:
         """Retrieve an ORM entity by its primary key identifier."""
-        statement = select(self.model).where(self.model.id == entity_id)  # type: ignore[attr-defined]
+        statement = select(self.model).where(self.model.id == entity_id)  # pyright: ignore[reportAttributeAccessIssue]
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
@@ -110,7 +110,7 @@ class BaseRepository(Generic[T]):
 
     async def delete(self, entity_id: int) -> bool:
         """Delete an entity by its primary key identifier."""
-        statement = delete(self.model).where(self.model.id == entity_id)  # type: ignore[attr-defined]
+        statement = delete(self.model).where(self.model.id == entity_id)  # pyright: ignore[reportAttributeAccessIssue]
         result = await self.session.execute(statement)
         await self.session.flush()
         deleted = (getattr(result, "rowcount", 0) or 0) > 0
@@ -127,7 +127,7 @@ class BaseRepository(Generic[T]):
 
     async def exists(self, entity_id: int) -> bool:
         """Check if an entity exists by primary key identifier using optimized EXISTS clause."""
-        statement = select(exists().where(self.model.id == entity_id))  # type: ignore[attr-defined]
+        statement = select(exists().where(self.model.id == entity_id))  # pyright: ignore[reportAttributeAccessIssue]
         result = await self.session.execute(statement)
         return bool(result.scalar())
 

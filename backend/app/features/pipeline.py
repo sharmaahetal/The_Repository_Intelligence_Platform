@@ -84,7 +84,7 @@ class FeaturePipeline:
             loop = None
 
         if loop and loop.is_running():
-            import nest_asyncio  # type: ignore
+            import nest_asyncio  # type: ignore # pyright: ignore[reportMissingImports]
 
             nest_asyncio.apply()
             return loop.run_until_complete(self.compute_features_async(snapshot))

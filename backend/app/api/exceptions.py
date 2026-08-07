@@ -99,14 +99,16 @@ def _log_exception_context(
     request_id = getattr(request.state, "request_id", None) or ctx.get("request_id", "unknown")
     endpoint = request.url.path
     user_agent = request.headers.get("user-agent", "unknown")
+    exc_details = getattr(exc, "details", None)
+    details_dict = exc_details if isinstance(exc_details, dict) else {}
     repository = (
         ctx.get("repository")
         or request.query_params.get("repo")
-        or (exc.details.get("repository") if hasattr(exc, "details") else None)
+        or details_dict.get("repository")
         or "unknown"
     )
     model_version = (
-        (exc.details.get("model_version") if hasattr(exc, "details") else None)
+        details_dict.get("model_version")
         or ctx.get("model_version")
         or "unknown"
     )

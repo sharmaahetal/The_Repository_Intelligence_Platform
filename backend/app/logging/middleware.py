@@ -1,6 +1,6 @@
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -12,7 +12,7 @@ from backend.app.logging.logger import logger
 class TelemetryMiddleware(BaseHTTPMiddleware):
     """Middleware binding request-scoped correlation IDs to contextvars and logging request latency."""
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         request_id = (
             request.headers.get("X-Request-ID")
             or request.headers.get("X-Correlation-ID")

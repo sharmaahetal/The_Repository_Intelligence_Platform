@@ -4,7 +4,7 @@ Stores SHAP feature importance breakdowns and narrative summaries for prediction
 """
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.database.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
-    from backend.app.database.models.prediction import Prediction
+    Prediction = Any
 
 
 class PredictionExplanation(Base, TimestampMixin):

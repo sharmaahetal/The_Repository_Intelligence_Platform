@@ -5,7 +5,7 @@ import sys
 import time
 from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from backend.app.logging.context import get_request_context
 from backend.app.logging.formatter import ConsoleFormatter, JSONFormatter
@@ -105,8 +105,8 @@ def log_execution_time(event_name: str | None = None, level: int = logging.INFO)
                 )
 
         if asyncio_is_coroutine_function(func):
-            return async_wrapper  # type: ignore
-        return sync_wrapper  # type: ignore
+            return cast(F, async_wrapper)
+        return cast(F, sync_wrapper)
 
     return decorator
 

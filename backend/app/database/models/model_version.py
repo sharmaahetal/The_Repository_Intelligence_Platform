@@ -4,7 +4,7 @@ Tracks ML model registry versions, hyperparameters, dataset hashes, and evaluati
 """
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import CheckConstraint, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.database.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
-    from backend.app.database.models.prediction import Prediction
+    Prediction = Any
 
 
 class ModelVersion(Base, TimestampMixin):

@@ -69,12 +69,13 @@ class UnitOfWork:
 
     async def __aenter__(self) -> Self:
         """Enter transaction context: instantiate AsyncSession and entity repositories."""
-        self.session = self.session_factory()
-        self._repositories = RepositoryRepository(self.session)
-        self._snapshots = SnapshotRepository(self.session)
-        self._predictions = PredictionRepository(self.session)
-        self._model_versions = ModelVersionRepository(self.session)
-        self._explanations = PredictionExplanationRepository(self.session)
+        session = self.session_factory()
+        self.session = session
+        self._repositories = RepositoryRepository(session)
+        self._snapshots = SnapshotRepository(session)
+        self._predictions = PredictionRepository(session)
+        self._model_versions = ModelVersionRepository(session)
+        self._explanations = PredictionExplanationRepository(session)
         logger.debug("Entered UnitOfWork context", extra={"component": "unit_of_work"})
         return self
 

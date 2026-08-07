@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -42,9 +42,9 @@ class ModelEvaluator:
             roc_auc = float(roc_auc_score(y_true, y_prob)) if len(np.unique(y_true)) > 1 else 0.5
             prec_curve, rec_curve, _ = precision_recall_curve(y_true, y_prob)
             pr_auc = float(auc(rec_curve, prec_curve))
-            f1 = float(f1_score(y_true, y_pred, zero_division=0))
-            precision = float(precision_score(y_true, y_pred, zero_division=0))
-            recall = float(recall_score(y_true, y_pred, zero_division=0))
+            f1 = float(f1_score(y_true, y_pred, zero_division=cast(Any, 0)))
+            precision = float(precision_score(y_true, y_pred, zero_division=cast(Any, 0)))
+            recall = float(recall_score(y_true, y_pred, zero_division=cast(Any, 0)))
             loss = float(log_loss(y_true, np.clip(y_prob, 1e-15, 1 - 1e-15)))
             brier = float(brier_score_loss(y_true, y_prob))
             cm = confusion_matrix(y_true, y_pred).tolist()
