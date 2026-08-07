@@ -115,7 +115,7 @@ def test_delete_repository_endpoint(client_with_fake_service):
 
     # Verify deleted
     get_res = client_with_fake_service.get("/repositories/1")
-    assert get_res.status_code == 500
+    assert get_res.status_code == 404
 
 
 def test_search_repositories_endpoint(client_with_fake_service):
@@ -124,3 +124,44 @@ def test_search_repositories_endpoint(client_with_fake_service):
     data = response.json()
     assert len(data) == 1
     assert data[0]["owner"] == "octocat"
+
+
+def test_create_repository_validation_error(client_with_fake_service):
+    invalid_payload = {"owner": "octocat"}  # Missing required fields
+    response = client_with_fake_service.post("/repositories", json=invalid_payload)
+    assert response.status_code == 422
+
+
+def test_create_repository_duplicate_conflict(client_with_fake_service):
+    duplicate_payload = {
+        "github_repository_id": 100,
+        "owner": "octocat",
+        "name": "Hello-World",
+        "full_name": "octocat/Hello-World",
+        "default_branch": "main",
+        "language": "Python",
+        "visibility": "public",
+        "archived": False,
+        "fork": False,
+    }
+    response = client_with_fake_service.post("/repositories", json=duplicate_payload)
+    assert response.status_code == 409
+    assert response.json()["error_code"] == "REPOSITORY_ALREADY_EXISTS"
+
+
+def test_get_repository_not_found(client_with_fake_service):
+    response = client_with_fake_service.get("/repositories/999")
+    assert response.status_code == 404
+    assert response.json()["error_code"] == "REPOSITORY_NOT_FOUND"
+
+
+def test_update_repository_not_found(client_with_fake_service):
+    response = client_with_fake_service.patch("/repositories/999", json={"language": "Go"})
+    assert response.status_code == 404
+    assert response.json()["error_code"] == "REPOSITORY_NOT_FOUND"
+
+
+def test_delete_repository_not_found(client_with_fake_service):
+    response = client_with_fake_service.delete("/repositories/999")
+    assert response.status_code == 404
+    assert response.json()["error_code"] == "REPOSITORY_NOT_FOUND"

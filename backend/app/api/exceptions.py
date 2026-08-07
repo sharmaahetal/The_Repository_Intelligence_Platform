@@ -7,6 +7,12 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.app.logging import get_request_context, logger
+from backend.app.services.exceptions import (
+    RepositoryAlreadyExists,
+)
+from backend.app.services.exceptions import (
+    RepositoryNotFound as ServiceRepositoryNotFound,
+)
 
 
 class ErrorBody(BaseModel):
@@ -145,6 +151,32 @@ def register_exception_handlers(app: FastAPI) -> None:
                 message=exc.message,
                 request_id=req_id,
                 details=exc.details,
+            ).model_dump(),
+        )
+
+    @app.exception_handler(ServiceRepositoryNotFound)
+    async def service_repo_not_found_handler(request: Request, exc: ServiceRepositoryNotFound):
+        req_id = _log_exception_context(request, exc, "REPOSITORY_NOT_FOUND", status.HTTP_404_NOT_FOUND)
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content=ErrorResponse(
+                error_code="REPOSITORY_NOT_FOUND",
+                message=exc.message,
+                request_id=req_id,
+                details={},
+            ).model_dump(),
+        )
+
+    @app.exception_handler(RepositoryAlreadyExists)
+    async def repo_already_exists_handler(request: Request, exc: RepositoryAlreadyExists):
+        req_id = _log_exception_context(request, exc, "REPOSITORY_ALREADY_EXISTS", status.HTTP_409_CONFLICT)
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content=ErrorResponse(
+                error_code="REPOSITORY_ALREADY_EXISTS",
+                message=exc.message,
+                request_id=req_id,
+                details={},
             ).model_dump(),
         )
 
