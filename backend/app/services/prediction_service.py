@@ -140,6 +140,21 @@ class PredictionService:
             logger.info("Prediction fetched", extra={"prediction_id": prediction_id})
             return prediction
 
+    async def update_prediction(
+        self,
+        prediction_id: int,
+        **attributes: Any,
+    ) -> Prediction:
+        """Update attributes of an existing prediction entity."""
+        uow_context = self.uow if self.uow is not None else UnitOfWork()
+        async with uow_context as uow:
+            updated = await uow.predictions.update(prediction_id, attributes)
+            if updated is None:
+                raise PredictionNotFound(prediction_id)
+            await uow.commit()
+            logger.info("Prediction updated", extra={"prediction_id": prediction_id})
+            return updated
+
     async def latest_prediction(self, repository_snapshot_id: int) -> Prediction:
         """Retrieve the newest prediction recorded for a snapshot."""
         uow_context = self.uow if self.uow is not None else UnitOfWork()

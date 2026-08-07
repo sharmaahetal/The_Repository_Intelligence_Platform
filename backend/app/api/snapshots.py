@@ -2,12 +2,14 @@
 
 from fastapi import APIRouter, Depends, status
 
-from backend.app.api.deps import get_snapshot_service
+from backend.app.api.deps import get_prediction_service, get_snapshot_service
 from backend.app.schemas import (
+    PredictionResponse,
     RepositorySnapshotCreate,
     RepositorySnapshotResponse,
     RepositorySnapshotUpdate,
 )
+from backend.app.services.prediction_service import PredictionService
 from backend.app.services.snapshot_service import SnapshotService
 
 router = APIRouter(prefix="/snapshots", tags=["Snapshots"])
@@ -99,3 +101,19 @@ async def repository_history(
     """Retrieve chronological snapshot history for a repository."""
     history = await service.snapshot_history(repository_id)
     return [RepositorySnapshotResponse.model_validate(s) for s in history]
+
+
+@router.get(
+    "/{snapshot_id}/predictions",
+    response_model=list[PredictionResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get predictions for a snapshot",
+    tags=["Predictions"],
+)
+async def get_snapshot_predictions(
+    snapshot_id: int,
+    prediction_service: PredictionService = Depends(get_prediction_service),
+) -> list[PredictionResponse]:
+    """List all predictions generated for a repository snapshot."""
+    predictions = await prediction_service.list_predictions_for_snapshot(snapshot_id)
+    return [PredictionResponse.model_validate(p) for p in predictions]
