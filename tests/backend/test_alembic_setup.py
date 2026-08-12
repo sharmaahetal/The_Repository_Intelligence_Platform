@@ -1,7 +1,7 @@
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 
-from backend.app.core.settings import settings
+from backend.app.config import settings
 from backend.app.database.base import ORM_METADATA
 
 

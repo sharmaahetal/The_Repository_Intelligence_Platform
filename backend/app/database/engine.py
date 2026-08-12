@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.sql import text
 
-from backend.app.core.settings import settings
+from backend.app.config import settings
 from backend.app.logging import logger
 
 EngineOptions = dict[str, Any]

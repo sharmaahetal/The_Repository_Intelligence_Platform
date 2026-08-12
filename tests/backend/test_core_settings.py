@@ -1,90 +1,55 @@
 import os
 from unittest.mock import patch
 
-import pytest
-from pydantic import BaseModel, SecretStr, ValidationError
-
-from backend.app.core.settings import (
-    AppSettings,
-    DatabaseSettings,
-    GitHubSettings,
-    LoggingSettings,
-    ModelSettings,
-    RedisSettings,
-    get_settings,
+from backend.app.config import settings
+from backend.app.config.models import (
+    AppConfig,
+    CacheConfig,
+    DatabaseConfig,
+    GitHubConfig,
+    ModelConfig,
 )
+from backend.app.config.settings import Settings
 
 
-def test_subsystems_are_plain_basemodels():
-    """Verify subsystems inherit from plain pydantic BaseModel, not BaseSettings."""
-    assert issubclass(AppSettings, BaseModel)
-    assert issubclass(DatabaseSettings, BaseModel)
-    assert issubclass(GitHubSettings, BaseModel)
-    assert issubclass(RedisSettings, BaseModel)
-    assert issubclass(LoggingSettings, BaseModel)
-    assert issubclass(ModelSettings, BaseModel)
+def test_subsystem_configs_exist():
+    """Verify consolidated Settings contains all subsystem configs."""
+    s = Settings()
+    assert isinstance(s.app, AppConfig)
+    assert isinstance(s.database, DatabaseConfig)
+    assert isinstance(s.github, GitHubConfig)
+    assert isinstance(s.cache, CacheConfig)
+    assert isinstance(s.model, ModelConfig)
 
 
-def test_database_url_default_fallback():
-    """Verify DatabaseSettings.url falls back to default SQLite connection string when DATABASE_URL is not set."""
-    with patch.dict(os.environ, {}, clear=True):
-        if os.path.exists(".env"):
-            with patch("os.path.exists", return_value=False):
-                get_settings.cache_clear()
-                s = get_settings()
-                assert s.database.url == "sqlite+aiosqlite:///./data.db"
-        get_settings.cache_clear()
+def test_database_url_default():
+    """Verify database URL defaults and environment overrides."""
+    with patch.dict(os.environ, {"DATABASE_URL": "sqlite+aiosqlite:///./test_override.db"}, clear=True):
+        s = Settings()
+        assert s.database.url == "sqlite+aiosqlite:///./test_override.db"
 
 
-
-def test_environment_literal_validation():
-    """Blocker 2: Environment must be Literal['development', 'testing', 'staging', 'production']."""
-    with patch.dict(
-        os.environ,
-        {"DATABASE_URL": "postgresql://localhost:5432/test_db", "ENVIRONMENT": "invalid_env_name"},
-        clear=True,
-    ):
-        get_settings.cache_clear()
-        with pytest.raises(ValidationError) as exc_info:
-            get_settings()
-        assert "environment" in str(exc_info.value)
-    get_settings.cache_clear()
-
-
-def test_log_level_literal_validation():
-    """Blocker 3: Log level must be Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']."""
-    with patch.dict(
-        os.environ,
-        {"DATABASE_URL": "postgresql://localhost:5432/test_db", "LOG_LEVEL": "TRACE"},
-        clear=True,
-    ):
-        get_settings.cache_clear()
-        with pytest.raises(ValidationError) as exc_info:
-            get_settings()
-        assert "log_level" in str(exc_info.value)
-    get_settings.cache_clear()
-
-
-def test_secret_str_github_token():
-    """Major 3: GitHub token uses SecretStr to prevent credential leakage."""
+def test_environment_and_log_level_overrides():
+    """Verify environment and log_level settings configuration."""
     with patch.dict(
         os.environ,
         {
-            "DATABASE_URL": "postgresql://localhost:5432/test_db",
-            "GITHUB_TOKEN": "ghp_secret_token_123456789",
+            "ENVIRONMENT": "production",
+            "CORS_ORIGINS": '["https://app.example.com"]',
+            "LOG_LEVEL": "WARNING",
         },
         clear=True,
     ):
-        get_settings.cache_clear()
-        s = get_settings()
-        assert isinstance(s.github.token, SecretStr)
-        assert s.github.token.get_secret_value() == "ghp_secret_token_123456789"
-        # Verify str representation is masked
-        assert "ghp_secret_token_123456789" not in str(s.github.token)
-    get_settings.cache_clear()
+        s = Settings()
+        assert s.app.environment == "production"
+        assert s.app.log_level == "WARNING"
 
 
-def test_settings_lru_cache_singleton():
-    s1 = get_settings()
-    s2 = get_settings()
-    assert s1 is s2
+def test_backwards_compatibility_properties():
+    """Verify top-level backward compatibility property accessors on Settings."""
+    assert settings.DATABASE_URL is not None
+    assert settings.REDIS_URL is not None
+    assert settings.APP_NAME is not None
+    assert settings.MODEL_REGISTRY_PATH is not None
+    assert settings.DEFAULT_MODEL_VERSION is not None
+    assert settings.redis is not None

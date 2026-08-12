@@ -3,7 +3,7 @@ import asyncio
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from backend.app.core.settings import settings
+from backend.app.config import settings
 from backend.app.database.base import ORM_METADATA
 
 # Model metadata for 'autogenerate' support
